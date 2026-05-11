@@ -202,7 +202,7 @@ fig_pie = px.pie(
     wilker_count,
     names='Wilker',
     values='jumlah',
-    title='Persentase Data per Wilker',
+    title='Persentase Dokumen Yang Dikeluarkan per Wilker',
     hole=0.3
 )
 
