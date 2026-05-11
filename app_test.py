@@ -1,7 +1,7 @@
 # ======================================================
 # IMPORT LIBRARY
 # ======================================================
-
+import base64
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -24,20 +24,35 @@ st.set_page_config(
 # BACKGROUND GRADIENT
 # ======================================================
 
-st.markdown(
-    """
-    <style>
-    .stApp {
-        background: linear-gradient(
-            to right,
-            #dfe9f3,
-            #ffffff
-        );
-    }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
+def add_bg_from_local(image_file):
+
+    with open(image_file, "rb") as image:
+        encoded = base64.b64encode(
+            image.read()
+        ).decode()
+
+    st.markdown(
+        f"""
+        <style>
+        .stApp {{
+            background-image: url(
+                "data:image/png;base64,{encoded}"
+            );
+
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }}
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
+# Panggil function
+add_bg_from_local('MRAP12.jpg')
+
+
 # ======================================================
 # JUDUL DASHBOARD
 # ======================================================
