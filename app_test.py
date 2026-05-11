@@ -281,7 +281,7 @@ st.markdown("## 📅 Waktu Pelayanan per Jenis Layanan")
 #     errors='coerce'
 # )
 
-Pastikan kolom tanggal berbentuk datetime
+#Pastikan kolom tanggal berbentuk datetime
 df['Tanggal Terbit Saji atau Rekom'] = pd.to_datetime(
     df['Tanggal Terbit Saji atau Rekom'],
     errors='coerce'
@@ -290,7 +290,7 @@ df['Tanggal Terbit Saji atau Rekom'] = pd.to_datetime(
 waktu_layanan = (
     df.groupby([
         df['tanggal'].dt.date,
-        'jenis_layanan'
+        'Jenis Layanan'
     ])
     .size()
     .reset_index(name='jumlah')
@@ -298,9 +298,9 @@ waktu_layanan = (
 
 fig_time = px.line(
     waktu_layanan,
-    x='tanggal',
+    x='Tanggal Terbit Saji atau Rekom',
     y='jumlah',
-    color='jenis_layanan',
+    color='Jenis Layanan',
     markers=True,
     title='Tren Waktu Jenis Layanan',
     template='plotly_white'
