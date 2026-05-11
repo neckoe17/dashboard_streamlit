@@ -76,7 +76,7 @@ def add_bg_from_local(image_file):
             background-position: center;
             background-repeat: no-repeat;
 
-            filter: blur(2px);
+            filter: blur(0,1px);
             transform: scale(1.1);
 
             z-index: -1;
