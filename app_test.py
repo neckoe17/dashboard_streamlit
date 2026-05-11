@@ -21,36 +21,16 @@ st.set_page_config(
     layout="wide"
 )
 # ======================================================
-# BACKGROUND GRADIENT
+# IMPORT
 # ======================================================
 
-# def add_bg_from_local(image_file):
+import streamlit as st
+import base64
 
-#     with open(image_file, "rb") as image:
-#         encoded = base64.b64encode(
-#             image.read()
-#         ).decode()
+# ======================================================
+# FUNCTION BACKGROUND + CUSTOM CSS
+# ======================================================
 
-#     st.markdown(
-#         f"""
-#         <style>
-#         .stApp {{
-#             background-image: url(
-#                 "data:image/png;base64,{encoded}"
-#             );
-
-#             background-size: cover;
-#             background-position: center;
-#             background-repeat: no-repeat;
-#             background-attachment: fixed;
-#         }}
-#         </style>
-#         """,
-#         unsafe_allow_html=True
-#     )
-
-# # Panggil function
-# add_bg_from_local('MRAP12.jpg')
 def add_bg_from_local(image_file):
 
     with open(image_file, "rb") as image:
@@ -62,128 +42,250 @@ def add_bg_from_local(image_file):
         f"""
         <style>
 
-            /* =========================================
-           SEMUA TEXT MENJADI HITAM
-        ========================================= */
-    
-        html, body, [class*="css"]  {{
-            color: black;
-        }}
-    
-        p, h1, h2, h3, h4, h5, h6, label, div {{
-            color: black !important;
+        /* =====================================================
+           GLOBAL STYLE
+        ===================================================== */
+
+        html, body, [class*="css"] {{
+            font-family: 'Segoe UI', sans-serif;
+            color: #111111;
         }}
 
-    /* =========================================
-       TITLE & SUBHEADER
-    ========================================= */
+        h1, h2, h3, h4, h5, h6 {{
+            color: #111111 !important;
+            font-weight: 700 !important;
+        }}
 
-    .stTitle {{
-        color: black !important;
-        font-weight: bold;
-    }}
+        p, label, div {{
+            color: #222222 !important;
+        }}
 
-    .stSubheader {{
-        color: black !important;
-        font-weight: bold;
-    }}
+        /* =====================================================
+           BACKGROUND IMAGE BLUR
+        ===================================================== */
 
-    /* =========================================
-       DATAFRAME / TABEL
-    ========================================= */
-
-    .stDataFrame {{
-        background-color: rgba(255,255,255,0.55);
-        border-radius: 15px;
-        padding: 10px;
-        backdrop-filter: blur(5px);
-    }}
-
-    /* =========================================
-       TABLE INSIDE DATAFRAME
-    ========================================= */
-
-    [data-testid="stDataFrame"] {{
-        background-color: rgba(255,255,255,0.45);
-        border-radius: 15px;
-        padding: 10px;
-        backdrop-filter: blur(5px);
-    }}
-
-    /* =========================================
-       METRIC CARD
-    ========================================= */
-
-    [data-testid="metric-container"] {{
-        background-color: rgba(255,255,255,0.55);
-        border: 1px solid rgba(255,255,255,0.2);
-        padding: 15px;
-        border-radius: 15px;
-        backdrop-filter: blur(4px);
-    }}
-
-    /* =========================================
-       SIDEBAR
-    ========================================= */
-
-    section[data-testid="stSidebar"] {{
-        background-color: rgba(255,255,255,0.55);
-        backdrop-filter: blur(8px);
-
-    /* =========================================
-       PLOTLY CHART
-    ========================================= */
-
-    .js-plotly-plot {{
-        background-color: rgba(255,255,255,0.4);
-        border-radius: 15px;
-        padding: 10px;
-    }}
-
-    /* =========================================
-       BLOCK CONTAINER
-    ========================================= */
-
-    .block-container {{
-        background-color: rgba(255,255,255,0.25);
-        padding: 2rem;
-        border-radius: 20px;
-        backdrop-filter: blur(10px);
-    }}
-
-
-        /* Background blur layer */
         .stApp::before {{
+
             content: "";
+
             position: fixed;
+
             top: 0;
             left: 0;
+
             width: 100%;
             height: 100%;
 
             background: url("data:image/png;base64,{encoded}");
+
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
+            background-attachment: fixed;
 
-            filter: blur(0,1px);
-            transform: scale(1.1);
+            filter: blur(3px) brightness(0.92);
+
+            transform: scale(1.03);
 
             z-index: -1;
         }}
 
-        /* Transparan agar background terlihat */
         .stApp {{
             background: transparent;
         }}
 
-        /* Konten utama */
+        /* =====================================================
+           MAIN CONTAINER
+        ===================================================== */
+
         .block-container {{
-            background-color: rgba(255,255,255,0.55);
+
+            background: rgba(255,255,255,0.28);
+
+            backdrop-filter: blur(14px);
+
+            border-radius: 25px;
+
             padding: 2rem;
-            border-radius: 20px;
+
+            border: 1px solid rgba(255,255,255,0.25);
+
+            box-shadow:
+                0 8px 32px rgba(0,0,0,0.15);
+
         }}
-        
+
+        /* =====================================================
+           TITLE
+        ===================================================== */
+
+        .stTitle {{
+            font-size: 42px !important;
+            font-weight: 800 !important;
+            color: #0f172a !important;
+        }}
+
+        /* =====================================================
+           SUBHEADER
+        ===================================================== */
+
+        .stSubheader {{
+            color: #111827 !important;
+            font-weight: 700 !important;
+            font-size: 28px !important;
+        }}
+
+        /* =====================================================
+           METRIC CARD
+        ===================================================== */
+
+        [data-testid="metric-container"] {{
+
+            background: rgba(255,255,255,0.55);
+
+            border-radius: 20px;
+
+            padding: 22px;
+
+            border: 1px solid rgba(255,255,255,0.35);
+
+            backdrop-filter: blur(10px);
+
+            box-shadow:
+                0 4px 20px rgba(0,0,0,0.10);
+
+            transition: 0.3s;
+        }}
+
+        [data-testid="metric-container"]:hover {{
+            transform: translateY(-3px);
+            box-shadow:
+                0 8px 24px rgba(0,0,0,0.15);
+        }}
+
+        /* =====================================================
+           DATAFRAME
+        ===================================================== */
+
+        [data-testid="stDataFrame"] {{
+
+            background: rgba(255,255,255,0.45);
+
+            border-radius: 18px;
+
+            padding: 12px;
+
+            backdrop-filter: blur(8px);
+
+            border: 1px solid rgba(255,255,255,0.3);
+
+            box-shadow:
+                0 4px 18px rgba(0,0,0,0.08);
+
+        }}
+
+        /* =====================================================
+           SIDEBAR
+        ===================================================== */
+
+        section[data-testid="stSidebar"] {{
+
+            background: rgba(255,255,255,0.35);
+
+            backdrop-filter: blur(18px);
+
+            border-right:
+                1px solid rgba(255,255,255,0.25);
+
+        }}
+
+        section[data-testid="stSidebar"] * {{
+            color: #111111 !important;
+        }}
+
+        /* =====================================================
+           BUTTON
+        ===================================================== */
+
+        .stButton > button {{
+
+            background: linear-gradient(
+                135deg,
+                #2563eb,
+                #1d4ed8
+            );
+
+            color: white !important;
+
+            border-radius: 12px;
+
+            border: none;
+
+            padding: 0.6rem 1.2rem;
+
+            font-weight: 600;
+
+            transition: 0.3s;
+        }}
+
+        .stButton > button:hover {{
+
+            background: linear-gradient(
+                135deg,
+                #1d4ed8,
+                #1e40af
+            );
+
+            transform: scale(1.02);
+        }}
+
+        /* =====================================================
+           SELECTBOX
+        ===================================================== */
+
+        .stSelectbox > div > div {{
+
+            background: rgba(255,255,255,0.55);
+
+            border-radius: 12px;
+
+        }}
+
+        /* =====================================================
+           PLOTLY CHART
+        ===================================================== */
+
+        .js-plotly-plot {{
+
+            background: rgba(255,255,255,0.35);
+
+            border-radius: 20px;
+
+            padding: 10px;
+
+            backdrop-filter: blur(8px);
+
+            box-shadow:
+                0 4px 20px rgba(0,0,0,0.08);
+
+        }}
+
+        /* =====================================================
+           SCROLLBAR
+        ===================================================== */
+
+        ::-webkit-scrollbar {{
+            width: 10px;
+        }}
+
+        ::-webkit-scrollbar-track {{
+            background: rgba(255,255,255,0.2);
+        }}
+
+        ::-webkit-scrollbar-thumb {{
+            background: rgba(0,0,0,0.25);
+            border-radius: 10px;
+        }}
 
         </style>
         """,
@@ -194,7 +296,7 @@ def add_bg_from_local(image_file):
 # PANGGIL FUNCTION
 # ======================================================
 
-add_bg_from_local('MRAP12.jpg')
+add_bg_from_local("MRAP12.jpg")
 
 # ======================================================
 # JUDUL DASHBOARD
@@ -379,7 +481,12 @@ wilker_count = (
 
 wilker_count.columns = ['Wilker', 'jumlah']
 
-fig_pie = px.pie(
+template='plotly_white'
+
+fig_pie.update_layout(
+    height=500,
+    title_x=0.5,
+    font=dict(size=14) = px.pie(
     wilker_count,
     names='Wilker',
     values='jumlah',
