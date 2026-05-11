@@ -89,7 +89,7 @@ def add_bg_from_local(image_file):
 
         /* Konten utama */
         .block-container {{
-            background-color: rgba(255,255,255,0.80);
+            background-color: rgba(255,255,255,0.95);
             padding: 2rem;
             border-radius: 20px;
         }}
