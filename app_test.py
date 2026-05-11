@@ -269,42 +269,42 @@ fig_pnbp.update_traces(
 
 st.plotly_chart(fig_pnbp, use_container_width=True)
 
-# ======================================================
-# GRAFIK WAKTU PER JENIS LAYANAN
-# ======================================================
+# # ======================================================
+# # GRAFIK WAKTU PER JENIS LAYANAN
+# # ======================================================
 
-st.markdown("## 📅 Waktu Pelayanan per Jenis Layanan")
+# st.markdown("## 📅 Waktu Pelayanan per Jenis Layanan")
 
-# # Pastikan kolom tanggal berbentuk datetime
-# df['tanggal'] = pd.to_datetime(
-#     df['tanggal'],
+# # # Pastikan kolom tanggal berbentuk datetime
+# # df['tanggal'] = pd.to_datetime(
+# #     df['tanggal'],
+# #     errors='coerce'
+# # )
+
+# #Pastikan kolom tanggal berbentuk datetime
+# df['Tanggal Terbit Saji atau Rekom'] = pd.to_datetime(
+#     df['Tanggal Terbit Saji atau Rekom'],
 #     errors='coerce'
 # )
 
-#Pastikan kolom tanggal berbentuk datetime
-df['Tanggal Terbit Saji atau Rekom'] = pd.to_datetime(
-    df['Tanggal Terbit Saji atau Rekom'],
-    errors='coerce'
-)
+# waktu_layanan = (
+#     df.groupby([
+#         df['tanggal'].dt.date,
+#         'Jenis Layanan'
+#     ])
+#     .size()
+#     .reset_index(name='jumlah')
+# )
 
-waktu_layanan = (
-    df.groupby([
-        df['tanggal'].dt.date,
-        'Jenis Layanan'
-    ])
-    .size()
-    .reset_index(name='jumlah')
-)
-
-fig_time = px.line(
-    waktu_layanan,
-    x='Tanggal Terbit Saji atau Rekom',
-    y='jumlah',
-    color='Jenis Layanan',
-    markers=True,
-    title='Tren Waktu Jenis Layanan',
-    template='plotly_white'
-)
+# fig_time = px.line(
+#     waktu_layanan,
+#     x='Tanggal Terbit Saji atau Rekom',
+#     y='jumlah',
+#     color='Jenis Layanan',
+#     markers=True,
+#     title='Tren Waktu Jenis Layanan',
+#     template='plotly_white'
+# )
 
 st.plotly_chart(fig_time, use_container_width=True)
 # ======================================================
@@ -312,7 +312,7 @@ st.plotly_chart(fig_time, use_container_width=True)
 # ======================================================
 
 st.markdown("---")
-st.caption("Dashboard dibuat menggunakan Streamlit & Google Spreadsheet")
+st.caption("Loka Pengelolaan Kelautan Pekanbaru")
 
 if st.button("Refresh Data"):
     st.cache_data.clear()
