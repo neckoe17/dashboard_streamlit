@@ -32,10 +32,13 @@ dan menampilkan visualisasi interaktif menggunakan Streamlit.
 #https://docs.google.com/spreadsheets/d/1wumyUK_I_1L6jAPs--7BfTxuDOaNWtwyeND-iICG-Q0/edit?gid=1353375041#gid=1353375041#
 sheet_id = "1wumyUK_I_1L6jAPs--7BfTxuDOaNWtwyeND-iICG-Q0"
 
-sheet_name = "gabungan"
+#sheet_name = "gabungan"
 
-url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv&sheet={sheet_name}"
+#url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv&sheet={sheet_name}"
 
+gid = "1353375041"   # ganti dengan gid sheet gabungan
+
+url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid={gid}"
 # ======================================================
 # MEMBACA DATA
 # ======================================================
@@ -143,3 +146,6 @@ else:
 
 st.markdown("---")
 st.caption("Dashboard dibuat menggunakan Streamlit & Google Spreadsheet")
+
+if st.button("Refresh Data"):
+    st.cache_data.clear()
