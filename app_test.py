@@ -269,6 +269,62 @@ fig_pnbp.update_traces(
 
 st.plotly_chart(fig_pnbp, use_container_width=True)
 
+# ======================================================
+# GRAFIK WAKTU LAYANAN
+# ======================================================
+
+st.markdown("## 📅 Tren Waktu Jenis Layanan")
+
+try:
+
+    # Konversi tanggal
+    df['Tanggal Terbit Saji atau Rekom'] = pd.to_datetime(
+        df['Tanggal Terbit Saji atau Rekom'],
+        errors='coerce'
+    )
+
+    # Hapus data tanggal kosong
+    df_waktu = df.dropna(
+        subset=['Tanggal Terbit Saji atau Rekom']
+    )
+
+    # Grouping data
+    waktu_layanan = (
+        df_waktu.groupby([
+            df_waktu['Tanggal Terbit Saji atau Rekom'].dt.date,
+            'Jenis Layanan'
+        ])
+        .size()
+        .reset_index(name='Jumlah')
+    )
+
+    # Rename kolom tanggal
+    waktu_layanan.columns = [
+        'Tanggal',
+        'Jenis Layanan',
+        'Jumlah'
+    ]
+
+    # Membuat line chart
+    fig_time = px.line(
+        waktu_layanan,
+        x='Tanggal',
+        y='Jumlah',
+        color='Jenis Layanan',
+        markers=True,
+        title='Tren Waktu Jenis Layanan',
+        template='plotly_white'
+    )
+
+    # Tampilkan chart
+    st.plotly_chart(
+        fig_time,
+        use_container_width=True
+    )
+
+except Exception as e:
+
+    st.error(f"Terjadi error pada grafik waktu: {e}")
 # # ======================================================
 # # GRAFIK WAKTU PER JENIS LAYANAN
 # # ======================================================
