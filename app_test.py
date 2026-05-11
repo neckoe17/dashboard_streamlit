@@ -390,23 +390,23 @@ with col3:
         "Jumlah Dokumen Diterbitkan",
         jumlah_dokumen
     )
-# ======================================================
-# PILIH KOLOM NUMERIK
-# ======================================================
+======================================================
+PILIH KOLOM NUMERIK
+======================================================
 
-#numeric_columns = df.select_dtypes(include=['int64', 'float64']).columns.tolist()
+numeric_columns = df.select_dtypes(include=['int64', 'float64']).columns.tolist()
 
-# if len(numeric_columns) > 0:
+if len(numeric_columns) > 0:
 
-#     st.subheader("📈 Visualisasi Data")
+    st.subheader("📈 Visualisasi Data")
 
-#     # Sidebar
-#     st.sidebar.header("Filter Dashboard")
+    # Sidebar
+    st.sidebar.header("Filter Dashboard")
 
-#     selected_column = st.sidebar.selectbox(
-#         "Pilih Kolom Numerik",
-#         numeric_columns
-#     )
+    selected_column = st.sidebar.selectbox(
+        "Pilih Kolom Numerik",
+        numeric_columns
+    )
 #     # ======================================================
 #     # HISTOGRAM
 #     # ======================================================
@@ -514,7 +514,10 @@ layanan_count = (
 
 layanan_count.columns = ['Jenis Layanan', 'jumlah']
 
-fig_layanan = px.bar(
+fig_layanan.update_layout(
+    height=500,
+    title_x=0.5,
+    font=dict(size=14) = px.bar(
     layanan_count,
     x='Jenis Layanan',
     y='jumlah',
@@ -541,7 +544,10 @@ pnbp_layanan = (
     .reset_index()
 )
 
-fig_pnbp = px.bar(
+fig_pnbp.update_layout(
+    height=500,
+    title_x=0.5,
+    font=dict(size=14) = px.bar(
     pnbp_layanan,
     x='Jenis Layanan',
     y='Jumlah PNBP',
