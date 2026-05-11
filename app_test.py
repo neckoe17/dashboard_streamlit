@@ -539,49 +539,83 @@ df['Jumlah PNBP'] = pd.to_numeric(df['Jumlah PNBP'], errors='coerce')
 # PIE CHART WILKER
 # ======================================================
 
-st.markdown("## 🥧 Persentase Layanan Wilker")
+st.markdown("## 🥧 Persentase Wilker")
 
-wilker_count = (
-    df['Wilker']
-    .value_counts()
-    .reset_index()
-)
+try:
 
-wilker_count.columns = ['Wilker', 'jumlah']
+    # ======================================================
+    # HITUNG DATA WILKER
+    # ======================================================
 
-template='plotly_white'
+    wilker_count = (
+        df['Wilker']
+        .astype(str)
+        .value_counts()
+        .reset_index()
+    )
 
-fig_pie = px.pie(
-    wilker_count,
-    names='Wilker',
-    values='Jumlah',
-    hole=0.4,
-    title='Persentase Wilker',
-    template='plotly_white'
-)
+    # Rename kolom
+    wilker_count.columns = [
+        'Wilker',
+        'Jumlah'
+    ]
 
-fig_pie.update_traces(
-    textinfo='percent+label'
-)
+    # ======================================================
+    # MEMBUAT PIE CHART
+    # ======================================================
 
-fig_pie.update_layout(
-    height=520,
-    title_x=0.5,
-    title_font_size=24,
-    font=dict(
-        family="Segoe UI",
-        size=14,
-        color="#1e293b"
-    ),
-    plot_bgcolor='rgba(255,255,255,0)',
-    paper_bgcolor='rgba(255,255,255,0)'
-)
+    fig_pie = px.pie(
+        wilker_count,
+        names='Wilker',
+        values='Jumlah',
+        hole=0.45,
+        title='Persentase Wilker',
+        template='plotly_white'
+    )
 
-st.plotly_chart(
-    fig_pie,
-    use_container_width=True
-)
+    # ======================================================
+    # CUSTOM PIE CHART
+    # ======================================================
 
+    fig_pie.update_traces(
+        textinfo='percent+label',
+        pull=[0.03] * len(wilker_count)
+    )
+
+    fig_pie.update_layout(
+
+        height=520,
+
+        title_x=0.5,
+
+        title_font_size=24,
+
+        font=dict(
+            family="Segoe UI",
+            size=14,
+            color="#1e293b"
+        ),
+
+        plot_bgcolor='rgba(255,255,255,0)',
+
+        paper_bgcolor='rgba(255,255,255,0)',
+
+        legend_title='Wilker'
+
+    )
+
+    # ======================================================
+    # TAMPILKAN CHART
+    # ======================================================
+
+    st.plotly_chart(
+        fig_pie,
+        use_container_width=True
+    )
+
+except Exception as e:
+
+    st.error(f"Terjadi error pada pie chart Wilker: {e}")
 # ======================================================
 # BAR CHART JENIS LAYANAN
 # ======================================================
