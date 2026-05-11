@@ -184,11 +184,17 @@ st.subheader("📈 Visualisasi Dashboard")
 # Pastikan kolom PNBP bertipe numerik
 df['Jumlah PNBP'] = pd.to_numeric(df['Jumlah PNBP'], errors='coerce')
 
+# Pastikan kolom tanggal berbentuk datetime
+df['Tanggal Terbit Saji atau Rekom'] = pd.to_datetime(
+    df['Tanggal Terbit Saji atau Rekom'],
+    errors='coerce'
+)
+
 # ======================================================
 # PIE CHART WILKER
 # ======================================================
 
-st.markdown("## 🥧 Persentase Wilker")
+st.markdown("## 🥧 Persentase Layanan Wilker")
 
 wilker_count = (
     df['Wilker']
@@ -257,7 +263,7 @@ fig_pnbp = px.bar(
     pnbp_layanan,
     x='Jenis Layanan',
     y='Jumlah PNBP',
-    text='PNBP',
+    text='Jumlah PNBP',
     title='Total PNBP Berdasarkan Jenis Layanan',
     template='plotly_white'
 )
