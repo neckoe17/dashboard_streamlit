@@ -588,32 +588,74 @@ st.plotly_chart(
 
 st.markdown("## 📊 Jumlah Setiap Jenis Layanan")
 
+# Menghitung jumlah tiap layanan
 layanan_count = (
     df['Jenis Layanan']
     .value_counts()
     .reset_index()
 )
 
-layanan_count.columns = ['Jenis Layanan', 'jumlah']
+# Rename kolom
+layanan_count.columns = [
+    'Jenis Layanan',
+    'Jumlah'
+]
 
-fig_layanan.update_layout(
-    height=500,
-    title_x=0.5,
-    font=dict(size=14) = px.bar(
+# ======================================================
+# MEMBUAT BAR CHART
+# ======================================================
+
+fig_layanan = px.bar(
     layanan_count,
     x='Jenis Layanan',
-    y='jumlah',
-    text='jumlah',
+    y='Jumlah',
+    text='Jumlah',
     title='Jumlah Dokumen per Jenis Layanan',
     template='plotly_white'
 )
+
+# ======================================================
+# CUSTOM TAMPILAN CHART
+# ======================================================
 
 fig_layanan.update_traces(
     textposition='outside'
 )
 
-st.plotly_chart(fig_layanan, use_container_width=True)
+fig_layanan.update_layout(
 
+    height=520,
+
+    title_x=0.5,
+
+    title_font_size=24,
+
+    font=dict(
+        family="Segoe UI",
+        size=14,
+        color="#1e293b"
+    ),
+
+    plot_bgcolor='rgba(255,255,255,0)',
+
+    paper_bgcolor='rgba(255,255,255,0)',
+
+    xaxis_title='Jenis Layanan',
+
+    yaxis_title='Jumlah Dokumen',
+
+    bargap=0.3
+
+)
+
+# ======================================================
+# TAMPILKAN CHART
+# ======================================================
+
+st.plotly_chart(
+    fig_layanan,
+    use_container_width=True
+)
 # ======================================================
 # TOTAL PNBP PER JENIS LAYANAN
 # ======================================================
