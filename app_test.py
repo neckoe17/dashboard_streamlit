@@ -62,19 +62,51 @@ st.dataframe(df, use_container_width=True)
 # INFORMASI DATA
 # ======================================================
 
+#st.subheader("📌 Informasi Dataset")
+
+#col1, col2, col3 = st.columns(3)
+
+#with col1:
+    #st.metric("Jumlah Baris", df.shape[0])
+
+#with col2:
+    #st.metric("Jumlah Kolom", df.shape[1])
+
+#with col3:
+    #st.metric("Total Data", df.size)
+# ======================================================
+# INFORMASI DATA
+# ======================================================
+
 st.subheader("📌 Informasi Dataset")
 
+# Menghitung jumlah data
+jumlah_jenis_layanan = df['Jenis Layanan'].nunique()
+
+jumlah_jenis_ikan = df['Jenis Ikan'].nunique()
+
+jumlah_dokumen = len(df)
+
+# Membuat kolom metric
 col1, col2, col3 = st.columns(3)
 
 with col1:
-    st.metric("Jumlah Baris", df.shape[0])
+    st.metric(
+        "Jumlah Jenis Layanan",
+        jumlah_jenis_layanan
+    )
 
 with col2:
-    st.metric("Jumlah Kolom", df.shape[1])
+    st.metric(
+        "Jumlah Jenis Ikan",
+        jumlah_jenis_ikan
+    )
 
 with col3:
-    st.metric("Total Data", df.size)
-
+    st.metric(
+        "Jumlah Dokumen Diterbitkan",
+        jumlah_dokumen
+    )
 # ======================================================
 # PILIH KOLOM NUMERIK
 # ======================================================
