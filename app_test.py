@@ -551,22 +551,36 @@ wilker_count.columns = ['Wilker', 'jumlah']
 
 template='plotly_white'
 
-fig_pie.update_layout(
-    height=500,
-    title_x=0.5,
-    font=dict(size=14) = px.pie(
+fig_pie = px.pie(
     wilker_count,
     names='Wilker',
-    values='jumlah',
-    title='Persentase Dokumen Yang Dikeluarkan per Wilker',
-    hole=0.3
+    values='Jumlah',
+    hole=0.4,
+    title='Persentase Wilker',
+    template='plotly_white'
 )
 
 fig_pie.update_traces(
     textinfo='percent+label'
 )
 
-st.plotly_chart(fig_pie, use_container_width=True)
+fig_pie.update_layout(
+    height=520,
+    title_x=0.5,
+    title_font_size=24,
+    font=dict(
+        family="Segoe UI",
+        size=14,
+        color="#1e293b"
+    ),
+    plot_bgcolor='rgba(255,255,255,0)',
+    paper_bgcolor='rgba(255,255,255,0)'
+)
+
+st.plotly_chart(
+    fig_pie,
+    use_container_width=True
+)
 
 # ======================================================
 # BAR CHART JENIS LAYANAN
