@@ -184,12 +184,6 @@ st.subheader("📈 Visualisasi Dashboard")
 # Pastikan kolom PNBP bertipe numerik
 df['Jumlah PNBP'] = pd.to_numeric(df['Jumlah PNBP'], errors='coerce')
 
-# Pastikan kolom tanggal berbentuk datetime
-# df['Tanggal Terbit Saji atau Rekom'] = pd.to_datetime(
-#     df['Tanggal Terbit Saji atau Rekom'],
-#     errors='coerce'
-# )
-
 # ======================================================
 # PIE CHART WILKER
 # ======================================================
@@ -281,9 +275,15 @@ st.plotly_chart(fig_pnbp, use_container_width=True)
 
 st.markdown("## 📅 Waktu Pelayanan per Jenis Layanan")
 
-# Pastikan kolom tanggal berbentuk datetime
-df['tanggal'] = pd.to_datetime(
-    df['tanggal'],
+# # Pastikan kolom tanggal berbentuk datetime
+# df['tanggal'] = pd.to_datetime(
+#     df['tanggal'],
+#     errors='coerce'
+# )
+
+Pastikan kolom tanggal berbentuk datetime
+df['Tanggal Terbit Saji atau Rekom'] = pd.to_datetime(
+    df['Tanggal Terbit Saji atau Rekom'],
     errors='coerce'
 )
 
