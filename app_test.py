@@ -28,7 +28,7 @@ import streamlit as st
 import base64
 
 # ======================================================
-# FUNCTION BACKGROUND + CUSTOM CSS
+# FUNCTION BACKGROUND + ELEGANT UI
 # ======================================================
 
 def add_bg_from_local(image_file):
@@ -47,21 +47,25 @@ def add_bg_from_local(image_file):
         ===================================================== */
 
         html, body, [class*="css"] {{
-            font-family: 'Segoe UI', sans-serif;
-            color: #111111;
+
+            font-family: 'Poppins', sans-serif;
+
+            color: #1e293b;
+
+        }}
+
+        p, div, label {{
+            color: #334155 !important;
+            font-size: 15px;
         }}
 
         h1, h2, h3, h4, h5, h6 {{
-            color: #111111 !important;
+            color: #0f172a !important;
             font-weight: 700 !important;
         }}
 
-        p, label, div {{
-            color: #222222 !important;
-        }}
-
         /* =====================================================
-           BACKGROUND IMAGE BLUR
+           BACKGROUND IMAGE
         ===================================================== */
 
         .stApp::before {{
@@ -76,16 +80,24 @@ def add_bg_from_local(image_file):
             width: 100%;
             height: 100%;
 
-            background: url("data:image/png;base64,{encoded}");
+            background:
+                linear-gradient(
+                    rgba(255,255,255,0.35),
+                    rgba(255,255,255,0.35)
+                ),
+                url("data:image/png;base64,{encoded}");
 
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
             background-attachment: fixed;
 
-            filter: blur(3px) brightness(0.92);
+            filter:
+                blur(2px)
+                brightness(1.08)
+                saturate(1.1);
 
-            transform: scale(1.03);
+            transform: scale(1.02);
 
             z-index: -1;
         }}
@@ -100,18 +112,22 @@ def add_bg_from_local(image_file):
 
         .block-container {{
 
-            background: rgba(255,255,255,0.28);
+            background:
+                rgba(255,255,255,0.58);
 
-            backdrop-filter: blur(14px);
+            backdrop-filter:
+                blur(18px);
 
-            border-radius: 25px;
+            border-radius: 28px;
 
-            padding: 2rem;
+            padding:
+                2.5rem;
 
-            border: 1px solid rgba(255,255,255,0.25);
+            border:
+                1px solid rgba(255,255,255,0.35);
 
             box-shadow:
-                0 8px 32px rgba(0,0,0,0.15);
+                0 10px 40px rgba(15,23,42,0.10);
 
         }}
 
@@ -120,9 +136,19 @@ def add_bg_from_local(image_file):
         ===================================================== */
 
         .stTitle {{
-            font-size: 42px !important;
+
+            font-size: 46px !important;
+
             font-weight: 800 !important;
-            color: #0f172a !important;
+
+            color:
+                #0f172a !important;
+
+            letter-spacing: 0.5px;
+
+            text-shadow:
+                1px 1px 2px rgba(255,255,255,0.4);
+
         }}
 
         /* =====================================================
@@ -130,9 +156,16 @@ def add_bg_from_local(image_file):
         ===================================================== */
 
         .stSubheader {{
-            color: #111827 !important;
-            font-weight: 700 !important;
+
             font-size: 28px !important;
+
+            color:
+                #1e293b !important;
+
+            font-weight: 700 !important;
+
+            margin-top: 20px;
+
         }}
 
         /* =====================================================
@@ -141,26 +174,37 @@ def add_bg_from_local(image_file):
 
         [data-testid="metric-container"] {{
 
-            background: rgba(255,255,255,0.55);
+            background:
+                rgba(255,255,255,0.72);
 
-            border-radius: 20px;
+            border-radius:
+                22px;
 
-            padding: 22px;
+            padding:
+                24px;
 
-            border: 1px solid rgba(255,255,255,0.35);
+            border:
+                1px solid rgba(255,255,255,0.4);
 
-            backdrop-filter: blur(10px);
+            backdrop-filter:
+                blur(12px);
 
             box-shadow:
-                0 4px 20px rgba(0,0,0,0.10);
+                0 6px 22px rgba(15,23,42,0.08);
 
-            transition: 0.3s;
+            transition:
+                all 0.3s ease;
+
         }}
 
         [data-testid="metric-container"]:hover {{
-            transform: translateY(-3px);
+
+            transform:
+                translateY(-5px);
+
             box-shadow:
-                0 8px 24px rgba(0,0,0,0.15);
+                0 10px 28px rgba(15,23,42,0.12);
+
         }}
 
         /* =====================================================
@@ -169,18 +213,23 @@ def add_bg_from_local(image_file):
 
         [data-testid="stDataFrame"] {{
 
-            background: rgba(255,255,255,0.45);
+            background:
+                rgba(255,255,255,0.68);
 
-            border-radius: 18px;
+            border-radius:
+                22px;
 
-            padding: 12px;
+            padding:
+                14px;
 
-            backdrop-filter: blur(8px);
+            backdrop-filter:
+                blur(10px);
 
-            border: 1px solid rgba(255,255,255,0.3);
+            border:
+                1px solid rgba(255,255,255,0.35);
 
             box-shadow:
-                0 4px 18px rgba(0,0,0,0.08);
+                0 6px 20px rgba(15,23,42,0.08);
 
         }}
 
@@ -190,9 +239,11 @@ def add_bg_from_local(image_file):
 
         section[data-testid="stSidebar"] {{
 
-            background: rgba(255,255,255,0.35);
+            background:
+                rgba(255,255,255,0.45);
 
-            backdrop-filter: blur(18px);
+            backdrop-filter:
+                blur(18px);
 
             border-right:
                 1px solid rgba(255,255,255,0.25);
@@ -200,7 +251,7 @@ def add_bg_from_local(image_file):
         }}
 
         section[data-testid="stSidebar"] * {{
-            color: #111111 !important;
+            color: #0f172a !important;
         }}
 
         /* =====================================================
@@ -209,45 +260,59 @@ def add_bg_from_local(image_file):
 
         .stButton > button {{
 
-            background: linear-gradient(
-                135deg,
-                #2563eb,
-                #1d4ed8
-            );
+            background:
+                linear-gradient(
+                    135deg,
+                    #2563eb,
+                    #3b82f6
+                );
 
             color: white !important;
 
-            border-radius: 12px;
+            border-radius:
+                14px;
 
             border: none;
 
-            padding: 0.6rem 1.2rem;
+            padding:
+                0.65rem 1.4rem;
 
-            font-weight: 600;
+            font-weight:
+                600;
 
-            transition: 0.3s;
+            box-shadow:
+                0 4px 14px rgba(37,99,235,0.25);
+
+            transition:
+                all 0.3s ease;
+
         }}
 
         .stButton > button:hover {{
 
-            background: linear-gradient(
-                135deg,
-                #1d4ed8,
-                #1e40af
-            );
+            transform:
+                scale(1.03);
 
-            transform: scale(1.02);
+            box-shadow:
+                0 8px 22px rgba(37,99,235,0.35);
+
         }}
 
         /* =====================================================
-           SELECTBOX
+           INPUT & SELECTBOX
         ===================================================== */
 
-        .stSelectbox > div > div {{
+        .stSelectbox > div > div,
+        .stTextInput > div > div > input {{
 
-            background: rgba(255,255,255,0.55);
+            background:
+                rgba(255,255,255,0.78);
 
-            border-radius: 12px;
+            border-radius:
+                14px;
+
+            border:
+                1px solid rgba(203,213,225,0.7);
 
         }}
 
@@ -257,16 +322,20 @@ def add_bg_from_local(image_file):
 
         .js-plotly-plot {{
 
-            background: rgba(255,255,255,0.35);
+            background:
+                rgba(255,255,255,0.55);
 
-            border-radius: 20px;
+            border-radius:
+                24px;
 
-            padding: 10px;
+            padding:
+                12px;
 
-            backdrop-filter: blur(8px);
+            backdrop-filter:
+                blur(10px);
 
             box-shadow:
-                0 4px 20px rgba(0,0,0,0.08);
+                0 8px 24px rgba(15,23,42,0.08);
 
         }}
 
@@ -279,12 +348,12 @@ def add_bg_from_local(image_file):
         }}
 
         ::-webkit-scrollbar-track {{
-            background: rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.3);
         }}
 
         ::-webkit-scrollbar-thumb {{
-            background: rgba(0,0,0,0.25);
-            border-radius: 10px;
+            background: rgba(100,116,139,0.4);
+            border-radius: 12px;
         }}
 
         </style>
@@ -297,7 +366,6 @@ def add_bg_from_local(image_file):
 # ======================================================
 
 add_bg_from_local("MRAP12.jpg")
-
 # ======================================================
 # JUDUL DASHBOARD
 # ======================================================
