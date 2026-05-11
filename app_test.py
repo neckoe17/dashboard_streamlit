@@ -10,6 +10,16 @@ import plotly.express as px
 # ======================================================
 # MEMBUAT BACKGROUND LAYAR
 # ======================================================
+
+# ======================================================
+# KONFIGURASI HALAMAN
+# ======================================================
+
+st.set_page_config(
+    page_title="Dashboard Google Spreadsheet",
+    page_icon="📊",
+    layout="wide"
+)
 # ======================================================
 # BACKGROUND GRADIENT
 # ======================================================
@@ -27,16 +37,6 @@ st.markdown(
     </style>
     """,
     unsafe_allow_html=True
-)
-
-# ======================================================
-# KONFIGURASI HALAMAN
-# ======================================================
-
-st.set_page_config(
-    page_title="Dashboard Google Spreadsheet",
-    page_icon="📊",
-    layout="wide"
 )
 # ======================================================
 # JUDUL DASHBOARD
