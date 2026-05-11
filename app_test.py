@@ -662,16 +662,21 @@ st.plotly_chart(
 
 st.markdown("## 💰 Total PNBP per Jenis Layanan")
 
+# ======================================================
+# GROUPING DATA
+# ======================================================
+
 pnbp_layanan = (
     df.groupby('Jenis Layanan')['Jumlah PNBP']
     .sum()
     .reset_index()
 )
 
-fig_pnbp.update_layout(
-    height=500,
-    title_x=0.5,
-    font=dict(size=14) = px.bar(
+# ======================================================
+# MEMBUAT BAR CHART
+# ======================================================
+
+fig_pnbp = px.bar(
     pnbp_layanan,
     x='Jenis Layanan',
     y='Jumlah PNBP',
@@ -680,12 +685,53 @@ fig_pnbp.update_layout(
     template='plotly_white'
 )
 
+# ======================================================
+# CUSTOM TEXT DI BATANG
+# ======================================================
+
 fig_pnbp.update_traces(
     texttemplate='Rp %{text:,.0f}',
     textposition='outside'
 )
 
-st.plotly_chart(fig_pnbp, use_container_width=True)
+# ======================================================
+# CUSTOM LAYOUT
+# ======================================================
+
+fig_pnbp.update_layout(
+
+    height=520,
+
+    title_x=0.5,
+
+    title_font_size=24,
+
+    font=dict(
+        family="Segoe UI",
+        size=14,
+        color="#1e293b"
+    ),
+
+    plot_bgcolor='rgba(255,255,255,0)',
+
+    paper_bgcolor='rgba(255,255,255,0)',
+
+    xaxis_title='Jenis Layanan',
+
+    yaxis_title='Total PNBP',
+
+    bargap=0.3
+
+)
+
+# ======================================================
+# TAMPILKAN CHART
+# ======================================================
+
+st.plotly_chart(
+    fig_pnbp,
+    use_container_width=True
+)
 
 # ======================================================
 # GRAFIK WAKTU LAYANAN
