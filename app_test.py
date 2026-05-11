@@ -6,6 +6,29 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 # ======================================================
+
+# ======================================================
+# MEMBUAT BACKGROUND LAYAR
+# ======================================================
+# ======================================================
+# BACKGROUND GRADIENT
+# ======================================================
+
+st.markdown(
+    """
+    <style>
+    .stApp {
+        background: linear-gradient(
+            to right,
+            #dfe9f3,
+            #ffffff
+        );
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
 # ======================================================
 # KONFIGURASI HALAMAN
 # ======================================================
