@@ -29,7 +29,7 @@ dan menampilkan visualisasi interaktif menggunakan Streamlit.
 # ======================================================
 # LINK CSV GOOGLE SHEET
 # ======================================================
-
+#https://docs.google.com/spreadsheets/d/1wumyUK_I_1L6jAPs--7BfTxuDOaNWtwyeND-iICG-Q0/edit?gid=1353375041#gid=1353375041#
 sheet_id = "1wumyUK_I_1L6jAPs--7BfTxuDOaNWtwyeND-iICG-Q0"
 
 sheet_name = "gabungan"
