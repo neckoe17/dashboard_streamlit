@@ -185,10 +185,10 @@ st.subheader("📈 Visualisasi Dashboard")
 df['Jumlah PNBP'] = pd.to_numeric(df['Jumlah PNBP'], errors='coerce')
 
 # Pastikan kolom tanggal berbentuk datetime
-df['Tanggal Terbit Saji atau Rekom'] = pd.to_datetime(
-    df['Tanggal Terbit Saji atau Rekom'],
-    errors='coerce'
-)
+# df['Tanggal Terbit Saji atau Rekom'] = pd.to_datetime(
+#     df['Tanggal Terbit Saji atau Rekom'],
+#     errors='coerce'
+# )
 
 # ======================================================
 # PIE CHART WILKER
