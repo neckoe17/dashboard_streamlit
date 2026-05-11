@@ -390,9 +390,9 @@ with col3:
         "Jumlah Dokumen Diterbitkan",
         jumlah_dokumen
     )
-======================================================
-PILIH KOLOM NUMERIK
-======================================================
+#======================================================
+#PILIH KOLOM NUMERIK
+#======================================================
 
 numeric_columns = df.select_dtypes(include=['int64', 'float64']).columns.tolist()
 
