@@ -593,7 +593,7 @@ try:
         font=dict(
             family="Segoe UI",
             size=14,
-            color="#1e293b"
+            color="#000000"
         ),
 
         plot_bgcolor='rgba(255,255,255,0)',
@@ -667,7 +667,7 @@ fig_layanan.update_layout(
     font=dict(
         family="Segoe UI",
         size=14,
-        color="#1e293b"
+        color="#000000"
     ),
 
     plot_bgcolor='rgba(255,255,255,0)',
@@ -743,7 +743,7 @@ fig_pnbp.update_layout(
     font=dict(
         family="Segoe UI",
         size=14,
-        color="#1e293b"
+        color="#000000"
     ),
 
     plot_bgcolor='rgba(255,255,255,0)',
