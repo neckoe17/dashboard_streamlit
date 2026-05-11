@@ -526,7 +526,7 @@ if len(numeric_columns) > 0:
 # VISUALISASI DATA
 # ======================================================
 
-st.subheader("📈 Visualisasi Dashboard")
+#st.subheader("📈 Visualisasi Dashboard")
 
 # ======================================================
 # PERSIAPAN DATA
