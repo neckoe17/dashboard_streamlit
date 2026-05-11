@@ -362,7 +362,7 @@ st.plotly_chart(fig_pnbp, use_container_width=True)
 #     template='plotly_white'
 # )
 
-st.plotly_chart(fig_time, use_container_width=True)
+#st.plotly_chart(fig_time, use_container_width=True)
 # ======================================================
 # FOOTER
 # ======================================================
