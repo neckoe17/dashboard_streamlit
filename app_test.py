@@ -32,7 +32,7 @@ dan menampilkan visualisasi interaktif menggunakan Streamlit.
 
 sheet_id = "1wumyUK_I_1L6jAPs--7BfTxuDOaNWtwyeND-iICG-Q0"
 
-sheet_name = "Sheet1"
+sheet_name = "gabungan"
 
 url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv&sheet={sheet_name}"
 
