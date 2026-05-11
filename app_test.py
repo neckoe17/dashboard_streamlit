@@ -62,6 +62,97 @@ def add_bg_from_local(image_file):
         f"""
         <style>
 
+        /* =========================================
+       SEMUA TEXT MENJADI HITAM
+    ========================================= */
+
+    html, body, [class*="css"]  {
+        color: black;
+    }
+
+    p, h1, h2, h3, h4, h5, h6, label, div {
+        color: black !important;
+    }
+
+    /* =========================================
+       TITLE & SUBHEADER
+    ========================================= */
+
+    .stTitle {
+        color: black !important;
+        font-weight: bold;
+    }
+
+    .stSubheader {
+        color: black !important;
+        font-weight: bold;
+    }
+
+    /* =========================================
+       DATAFRAME / TABEL
+    ========================================= */
+
+    .stDataFrame {
+        background-color: rgba(255,255,255,0.55);
+        border-radius: 15px;
+        padding: 10px;
+        backdrop-filter: blur(5px);
+    }
+
+    /* =========================================
+       TABLE INSIDE DATAFRAME
+    ========================================= */
+
+    [data-testid="stDataFrame"] {
+        background-color: rgba(255,255,255,0.45);
+        border-radius: 15px;
+        padding: 10px;
+        backdrop-filter: blur(5px);
+    }
+
+    /* =========================================
+       METRIC CARD
+    ========================================= */
+
+    [data-testid="metric-container"] {
+        background-color: rgba(255,255,255,0.55);
+        border: 1px solid rgba(255,255,255,0.2);
+        padding: 15px;
+        border-radius: 15px;
+        backdrop-filter: blur(4px);
+    }
+
+    /* =========================================
+       SIDEBAR
+    ========================================= */
+
+    section[data-testid="stSidebar"] {
+        background-color: rgba(255,255,255,0.55);
+        backdrop-filter: blur(8px);
+    }
+
+    /* =========================================
+       PLOTLY CHART
+    ========================================= */
+
+    .js-plotly-plot {
+        background-color: rgba(255,255,255,0.4);
+        border-radius: 15px;
+        padding: 10px;
+    }
+
+    /* =========================================
+       BLOCK CONTAINER
+    ========================================= */
+
+    .block-container {
+        background-color: rgba(255,255,255,0.25);
+        padding: 2rem;
+        border-radius: 20px;
+        backdrop-filter: blur(10px);
+    }
+
+
         /* Background blur layer */
         .stApp::before {{
             content: "";
@@ -93,6 +184,7 @@ def add_bg_from_local(image_file):
             padding: 2rem;
             border-radius: 20px;
         }}
+        
 
         </style>
         """,
