@@ -24,6 +24,33 @@ st.set_page_config(
 # BACKGROUND GRADIENT
 # ======================================================
 
+# def add_bg_from_local(image_file):
+
+#     with open(image_file, "rb") as image:
+#         encoded = base64.b64encode(
+#             image.read()
+#         ).decode()
+
+#     st.markdown(
+#         f"""
+#         <style>
+#         .stApp {{
+#             background-image: url(
+#                 "data:image/png;base64,{encoded}"
+#             );
+
+#             background-size: cover;
+#             background-position: center;
+#             background-repeat: no-repeat;
+#             background-attachment: fixed;
+#         }}
+#         </style>
+#         """,
+#         unsafe_allow_html=True
+#     )
+
+# # Panggil function
+# add_bg_from_local('MRAP12.jpg')
 def add_bg_from_local(image_file):
 
     with open(image_file, "rb") as image:
@@ -34,24 +61,49 @@ def add_bg_from_local(image_file):
     st.markdown(
         f"""
         <style>
-        .stApp {{
-            background-image: url(
-                "data:image/png;base64,{encoded}"
-            );
 
+        /* Background blur layer */
+        .stApp::before {{
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+
+            background: url("data:image/png;base64,{encoded}");
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
-            background-attachment: fixed;
+
+            filter: blur(6px);
+            transform: scale(1.1);
+
+            z-index: -1;
         }}
+
+        /* Transparan agar background terlihat */
+        .stApp {{
+            background: transparent;
+        }}
+
+        /* Konten utama */
+        .block-container {{
+            background-color: rgba(255,255,255,0.80);
+            padding: 2rem;
+            border-radius: 20px;
+        }}
+
         </style>
         """,
         unsafe_allow_html=True
     )
 
-# Panggil function
-add_bg_from_local('MRAP12.jpg')
+# ======================================================
+# PANGGIL FUNCTION
+# ======================================================
 
+add_bg_from_local('MRAP12.jpg')
 
 # ======================================================
 # JUDUL DASHBOARD
