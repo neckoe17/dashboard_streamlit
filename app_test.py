@@ -111,67 +111,196 @@ with col3:
 # PILIH KOLOM NUMERIK
 # ======================================================
 
-numeric_columns = df.select_dtypes(include=['int64', 'float64']).columns.tolist()
+#numeric_columns = df.select_dtypes(include=['int64', 'float64']).columns.tolist()
 
-if len(numeric_columns) > 0:
+# if len(numeric_columns) > 0:
 
-    st.subheader("📈 Visualisasi Data")
+#     st.subheader("📈 Visualisasi Data")
 
-    # Sidebar
-    st.sidebar.header("Filter Dashboard")
+#     # Sidebar
+#     st.sidebar.header("Filter Dashboard")
 
-    selected_column = st.sidebar.selectbox(
-        "Pilih Kolom Numerik",
-        numeric_columns
-    )
-    # ======================================================
-    # HISTOGRAM
-    # ======================================================
+#     selected_column = st.sidebar.selectbox(
+#         "Pilih Kolom Numerik",
+#         numeric_columns
+#     )
+#     # ======================================================
+#     # HISTOGRAM
+#     # ======================================================
 
-    fig_hist = px.histogram(
-        df,
-        x=selected_column,
-        title=f"Distribusi {selected_column}",
-        template="plotly_white"
-    )
+#     fig_hist = px.histogram(
+#         df,
+#         x=selected_column,
+#         title=f"Distribusi {selected_column}",
+#         template="plotly_white"
+#     )
 
-    st.plotly_chart(fig_hist, use_container_width=True)
+#     st.plotly_chart(fig_hist, use_container_width=True)
 
-    # ======================================================
-    # BOXPLOT
-    # ======================================================
+#     # ======================================================
+#     # BOXPLOT
+#     # ======================================================
 
-    fig_box = px.box(
-        df,
-        y=selected_column,
-        title=f"Boxplot {selected_column}",
-        template="plotly_white"
-    )
-    st.plotly_chart(fig_box, use_container_width=True)
+#     fig_box = px.box(
+#         df,
+#         y=selected_column,
+#         title=f"Boxplot {selected_column}",
+#         template="plotly_white"
+#     )
+#     st.plotly_chart(fig_box, use_container_width=True)
 
-    # ======================================================
-    # BAR CHART
-    # ======================================================
+#     # ======================================================
+#     # BAR CHART
+#     # ======================================================
 
-    if len(df.columns) >= 2:
-        category_column = st.sidebar.selectbox(
-            "Pilih Kolom Kategori",
-            df.columns
-        )
+#     if len(df.columns) >= 2:
+#         category_column = st.sidebar.selectbox(
+#             "Pilih Kolom Kategori",
+#             df.columns
+#         )
 
-        fig_bar = px.bar(
-            df,
-            x=category_column,
-            y=selected_column,
-            title=f"{selected_column} berdasarkan {category_column}",
-            template="plotly_white"
-        )
+#         fig_bar = px.bar(
+#             df,
+#             x=category_column,
+#             y=selected_column,
+#             title=f"{selected_column} berdasarkan {category_column}",
+#             template="plotly_white"
+#         )
 
-        st.plotly_chart(fig_bar, use_container_width=True)
+#         st.plotly_chart(fig_bar, use_container_width=True)
 
-else:
-    st.warning("Tidak ada kolom numerik pada dataset.")
+# else:
+#     st.warning("Tidak ada kolom numerik pada dataset.")
+# ======================================================
+# VISUALISASI DATA
+# ======================================================
 
+st.subheader("📈 Visualisasi Dashboard")
+
+# ======================================================
+# PERSIAPAN DATA
+# ======================================================
+
+# Pastikan kolom PNBP bertipe numerik
+df['Jumlah PNBP'] = pd.to_numeric(df['Jumlah PNBP'], errors='coerce')
+
+# ======================================================
+# PIE CHART WILKER
+# ======================================================
+
+st.markdown("## 🥧 Persentase Wilker")
+
+wilker_count = (
+    df['Wilker']
+    .value_counts()
+    .reset_index()
+)
+
+wilker_count.columns = ['Wilker', 'jumlah']
+
+fig_pie = px.pie(
+    wilker_count,
+    names='Wilker',
+    values='jumlah',
+    title='Persentase Data per Wilker',
+    hole=0.3
+)
+
+fig_pie.update_traces(
+    textinfo='percent+label'
+)
+
+st.plotly_chart(fig_pie, use_container_width=True)
+
+# ======================================================
+# BAR CHART JENIS LAYANAN
+# ======================================================
+
+st.markdown("## 📊 Jumlah Setiap Jenis Layanan")
+
+layanan_count = (
+    df['Jenis Layanan']
+    .value_counts()
+    .reset_index()
+)
+
+layanan_count.columns = ['Jenis Layanan', 'jumlah']
+
+fig_layanan = px.bar(
+    layanan_count,
+    x='Jenis Layanan',
+    y='jumlah',
+    text='jumlah',
+    title='Jumlah Dokumen per Jenis Layanan',
+    template='plotly_white'
+)
+
+fig_layanan.update_traces(
+    textposition='outside'
+)
+
+st.plotly_chart(fig_layanan, use_container_width=True)
+
+# ======================================================
+# TOTAL PNBP PER JENIS LAYANAN
+# ======================================================
+
+st.markdown("## 💰 Total PNBP per Jenis Layanan")
+
+pnbp_layanan = (
+    df.groupby('Jenis Layanan')['Jumlah PNBP']
+    .sum()
+    .reset_index()
+)
+
+fig_pnbp = px.bar(
+    pnbp_layanan,
+    x='Jenis Layanan',
+    y='Jumlah PNBP',
+    text='PNBP',
+    title='Total PNBP Berdasarkan Jenis Layanan',
+    template='plotly_white'
+)
+
+fig_pnbp.update_traces(
+    texttemplate='Rp %{text:,.0f}',
+    textposition='outside'
+)
+
+st.plotly_chart(fig_pnbp, use_container_width=True)
+
+# ======================================================
+# GRAFIK WAKTU PER JENIS LAYANAN
+# ======================================================
+
+st.markdown("## 📅 Waktu Pelayanan per Jenis Layanan")
+
+# Pastikan kolom tanggal berbentuk datetime
+df['tanggal'] = pd.to_datetime(
+    df['tanggal'],
+    errors='coerce'
+)
+
+waktu_layanan = (
+    df.groupby([
+        df['tanggal'].dt.date,
+        'jenis_layanan'
+    ])
+    .size()
+    .reset_index(name='jumlah')
+)
+
+fig_time = px.line(
+    waktu_layanan,
+    x='tanggal',
+    y='jumlah',
+    color='jenis_layanan',
+    markers=True,
+    title='Tren Waktu Jenis Layanan',
+    template='plotly_white'
+)
+
+st.plotly_chart(fig_time, use_container_width=True)
 # ======================================================
 # FOOTER
 # ======================================================
