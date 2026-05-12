@@ -6,12 +6,10 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 from datetime import datetime
-# ======================================================
 
 # ======================================================
 # FUNCTION BACKGROUND + ELEGANT UI
 # ======================================================
-
 def add_bg_from_local(image_file):
     with open(image_file, "rb") as image:
         encoded = base64.b64encode(image.read()).decode()
@@ -156,7 +154,7 @@ def add_bg_from_local(image_file):
     )
 
 # ======================================================
-# PANGGIL FUNCTION
+# PANGGIL FUNCTION BACKGROUND
 # ======================================================
 add_bg_from_local("MRAP12.jpg")
 
@@ -183,85 +181,78 @@ url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid=
 def load_data():
     df = pd.read_csv(url)
     # Pastikan kolom Jumlah PNBP numerik
-    df['Jumlah PNBP'] = pd.to_numeric(df['Jumlah PNBP'], errors='coerce')
+    if 'Jumlah PNBP' in df.columns:
+        df['Jumlah PNBP'] = pd.to_numeric(df['Jumlah PNBP'], errors='coerce')
     return df
 
 df = load_data()
+
+# ======================================================
+# DETEKSI KOLOM TANGGAL (jika ada)
+# ======================================================
+date_col = None
+df['Tahun-Bulan'] = None  # default
+for col in df.columns:
+    if 'tanggal' in col.lower() or 'date' in col.lower() or 'tgl' in col.lower() or 'periode' in col.lower():
+        # Coba konversi
+        try:
+            df[col] = pd.to_datetime(df[col], errors='coerce')
+            if df[col].notna().any():
+                date_col = col
+                df['Tahun-Bulan'] = df[col].dt.to_period('M').astype(str)
+                break
+        except:
+            continue
 
 # ======================================================
 # SIDEBAR FILTER
 # ======================================================
 st.sidebar.header("🔍 Filter Data")
 
-# 1. Filter Jumlah PNBP (numerik slider)
-min_pnbp = float(df['Jumlah PNBP'].min()) if not df['Jumlah PNBP'].isna().all() else 0.0
-max_pnbp = float(df['Jumlah PNBP'].max()) if not df['Jumlah PNBP'].isna().all() else 100000.0
-if min_pnbp == max_pnbp:
-    min_pnbp = 0
-    max_pnbp = max_pnbp + 1000
-
-pnbp_range = st.sidebar.slider(
-    "💰 Rentang Jumlah PNBP",
-    min_value=min_pnbp,
-    max_value=max_pnbp,
-    value=(min_pnbp, max_pnbp),
-    step=(max_pnbp - min_pnbp) / 100
-)
-
-# 2. Filter Jenis Layanan (dropdown multiselect)
-jenis_layanan_options = ["Semua"] + sorted(df['Jenis Layanan'].dropna().unique().tolist())
+# 1. Filter Jenis Layanan (multiselect)
+jenis_layanan_options = sorted(df['Jenis Layanan'].dropna().unique().tolist())
 selected_layanan = st.sidebar.multiselect(
     "📋 Jenis Layanan",
     options=jenis_layanan_options,
-    default=["Semua"]
+    default=jenis_layanan_options
 )
-if "Semua" in selected_layanan:
-    selected_layanan = jenis_layanan_options[1:]  # hapus "Semua" jika dipilih
 
-# 3. Filter Jenis Ikan (dropdown multiselect)
-jenis_ikan_options = ["Semua"] + sorted(df['Jenis Ikan'].dropna().unique().tolist())
+# 2. Filter Jenis Ikan (multiselect)
+jenis_ikan_options = sorted(df['Jenis Ikan'].dropna().unique().tolist())
 selected_ikan = st.sidebar.multiselect(
     "🐟 Jenis Ikan",
     options=jenis_ikan_options,
-    default=["Semua"]
+    default=jenis_ikan_options
 )
-if "Semua" in selected_ikan:
-    selected_ikan = jenis_ikan_options[1:]
 
-# 4. Filter Bulan (otomatis deteksi kolom tanggal)
-# Cari kolom yang berisi tanggal
-date_columns = [col for col in df.columns if any(keyword in col.lower() for keyword in ['tanggal', 'date', 'bulan', 'tgl', 'periode'])]
-if len(date_columns) == 0:
-    # Jika tidak ada, coba konversi semua kolom object ke datetime
-    for col in df.select_dtypes(include=['object']).columns:
-        try:
-            df[col] = pd.to_datetime(df[col], errors='ignore')
-            if pd.api.types.is_datetime64_any_dtype(df[col]):
-                date_columns.append(col)
-                break
-        except:
-            pass
-
-if len(date_columns) > 0:
-    date_col = date_columns[0]
-    df['Tahun-Bulan'] = df[date_col].dt.to_period('M').astype(str)
+# 3. Filter Bulan (dropdown, jika ada kolom tanggal)
+bulan_options = ["Semua"]
+if date_col is not None:
     bulan_options = ["Semua"] + sorted(df['Tahun-Bulan'].dropna().unique().tolist())
-    selected_bulan = st.sidebar.selectbox(
-        "📅 Bulan (Format: YYYY-MM)",
-        options=bulan_options,
-        index=0
-    )
+selected_bulan = st.sidebar.selectbox(
+    "📅 Bulan (Format: YYYY-MM)",
+    options=bulan_options,
+    index=0
+)
+
+# 4. Pilihan Kolom Numerik untuk Visualisasi (dropdown)
+numeric_columns = df.select_dtypes(include=['int64', 'float64']).columns.tolist()
+if 'Jumlah PNBP' in numeric_columns:
+    default_numeric = 'Jumlah PNBP'
 else:
-    selected_bulan = "Semua"
-    st.sidebar.info("Tidak ditemukan kolom tanggal. Filter bulan tidak tersedia.")
+    default_numeric = numeric_columns[0] if numeric_columns else None
+
+selected_numeric = st.sidebar.selectbox(
+    "📊 Pilih Kolom Numerik untuk Visualisasi",
+    options=numeric_columns if numeric_columns else ['Tidak ada kolom numerik'],
+    index=0 if numeric_columns else 0,
+    disabled=not numeric_columns
+)
 
 # ======================================================
 # APLIKASI FILTER KE DATAFRAME
 # ======================================================
 df_filtered = df.copy()
-
-# Filter Jumlah PNBP
-df_filtered = df_filtered[(df_filtered['Jumlah PNBP'] >= pnbp_range[0]) & (df_filtered['Jumlah PNBP'] <= pnbp_range[1])]
 
 # Filter Jenis Layanan
 if selected_layanan:
@@ -272,13 +263,13 @@ if selected_ikan:
     df_filtered = df_filtered[df_filtered['Jenis Ikan'].isin(selected_ikan)]
 
 # Filter Bulan
-if selected_bulan != "Semua" and len(date_columns) > 0:
+if selected_bulan != "Semua" and date_col is not None:
     df_filtered = df_filtered[df_filtered['Tahun-Bulan'] == selected_bulan]
 
 # ======================================================
 # MENAMPILKAN DATA YANG SUDAH DIFILTER
 # ======================================================
-st.subheader("📄 Data Layanan LPK Pekanbaru")
+st.subheader("📄 Data Layanan LPK Pekanbaru (Terfilter)")
 st.dataframe(df_filtered, use_container_width=True)
 
 # ======================================================
@@ -299,27 +290,9 @@ with col3:
     st.metric("Jumlah Dokumen Diterbitkan", jumlah_dokumen)
 
 # ======================================================
-# PILIH KOLOM NUMERIK UNTUK VISUALISASI TAMBAHAN
+# PIE CHART WILKER
 # ======================================================
-numeric_columns = df_filtered.select_dtypes(include=['int64', 'float64']).columns.tolist()
-if len(numeric_columns) > 0:
-    st.subheader("📈 Visualisasi Data")
-    selected_column = st.sidebar.selectbox(
-        "Pilih Kolom Numerik untuk Visualisasi",
-        numeric_columns,
-        key="numeric_col_vis"
-    )
-    # Anda bisa menambahkan plot sesuai kolom yang dipilih, misalnya histogram
-    if selected_column:
-        fig_hist = px.histogram(df_filtered, x=selected_column, title=f"Distribusi {selected_column}",
-                                template='plotly_white', color_discrete_sequence=['#3b82f6'])
-        fig_hist.update_layout(bargap=0.1, plot_bgcolor='rgba(255,255,255,0.8)')
-        st.plotly_chart(fig_hist, use_container_width=True)
-
-# ======================================================
-# PIE CHART WILKER (berdasarkan data terfilter)
-# ======================================================
-st.markdown("## 🥧 Persentase Wilker")
+st.markdown("## 🥧 Persentase Wilker (Terfilter)")
 try:
     wilker_count = df_filtered['Wilker'].astype(str).value_counts().reset_index()
     wilker_count.columns = ['Wilker', 'Jumlah']
@@ -334,49 +307,86 @@ except Exception as e:
     st.error(f"Terjadi error pada pie chart Wilker: {e}")
 
 # ======================================================
-# BAR CHART JENIS LAYANAN (berdasarkan data terfilter)
+# VISUALISASI PERBANDINGAN DENGAN KOLOM NUMERIK PILIHAN
 # ======================================================
-st.markdown("## 📊 Jumlah Setiap Jenis Layanan")
+if numeric_columns and selected_numeric != 'Tidak ada kolom numerik':
+    st.subheader(f"📊 Perbandingan {selected_numeric} Berdasarkan Kategori")
+
+    # Tab untuk perbandingan
+    tab1, tab2, tab3 = st.tabs(["Berdasarkan Jenis Layanan", "Berdasarkan Jenis Ikan", "Berdasarkan Bulan (jika ada)"])
+
+    with tab1:
+        # Group by Jenis Layanan
+        agg_data = df_filtered.groupby('Jenis Layanan')[selected_numeric].sum().reset_index()
+        agg_data = agg_data.sort_values(selected_numeric, ascending=False)
+        fig = px.bar(agg_data, x='Jenis Layanan', y=selected_numeric,
+                     text=selected_numeric,
+                     title=f"Total {selected_numeric} per Jenis Layanan",
+                     template='plotly_white',
+                     color=selected_numeric, color_continuous_scale='Blues')
+        fig.update_traces(texttemplate='%{text:,.0f}', textposition='outside')
+        fig.update_layout(height=500, xaxis_tickangle=-25)
+        st.plotly_chart(fig, use_container_width=True)
+
+    with tab2:
+        # Group by Jenis Ikan
+        agg_data = df_filtered.groupby('Jenis Ikan')[selected_numeric].sum().reset_index()
+        agg_data = agg_data.sort_values(selected_numeric, ascending=False)
+        fig = px.bar(agg_data, x='Jenis Ikan', y=selected_numeric,
+                     text=selected_numeric,
+                     title=f"Total {selected_numeric} per Jenis Ikan",
+                     template='plotly_white',
+                     color=selected_numeric, color_continuous_scale='Blues')
+        fig.update_traces(texttemplate='%{text:,.0f}', textposition='outside')
+        fig.update_layout(height=500, xaxis_tickangle=-25)
+        st.plotly_chart(fig, use_container_width=True)
+
+    with tab3:
+        if date_col is not None and 'Tahun-Bulan' in df_filtered.columns:
+            agg_data = df_filtered.groupby('Tahun-Bulan')[selected_numeric].sum().reset_index()
+            agg_data = agg_data.sort_values('Tahun-Bulan')
+            fig = px.line(agg_data, x='Tahun-Bulan', y=selected_numeric,
+                          markers=True,
+                          title=f"Trend {selected_numeric} per Bulan",
+                          template='plotly_white',
+                          color_discrete_sequence=['#3b82f6'])
+            fig.update_traces(line=dict(width=3), marker=dict(size=8))
+            fig.update_layout(height=500)
+            st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.info("Tidak ada kolom tanggal yang valid untuk filter bulan.")
+
+# ======================================================
+# JUMLAH DOKUMEN PER JENIS LAYANAN (bar chart)
+# ======================================================
+st.markdown("## 📊 Jumlah Setiap Jenis Layanan (Terfilter)")
 layanan_count = df_filtered['Jenis Layanan'].value_counts().reset_index()
 layanan_count.columns = ['Jenis Layanan', 'Jumlah']
 fig_layanan = px.bar(layanan_count, x='Jenis Layanan', y='Jumlah', text='Jumlah',
                      title='Jumlah Dokumen per Jenis Layanan', template='plotly_white',
                      color='Jumlah', color_continuous_scale='Blues')
-fig_layanan.update_traces(textposition='outside', textfont=dict(size=14, color='#111827'),
-                          marker=dict(line=dict(color='#1e3a8a', width=1.5)))
-fig_layanan.update_layout(height=650,
-                          title=dict(text='Jumlah Dokumen per Jenis Layanan', x=0.5, font=dict(size=28, color='#111827')),
-                          font=dict(family="Segoe UI", size=14, color="#111827"),
-                          plot_bgcolor='rgba(255,255,255,0.80)', paper_bgcolor='rgba(255,255,255,0)',
-                          xaxis=dict(title='Jenis Layanan', tickangle=-25, tickfont=dict(size=12, color='#111827'), showgrid=False),
-                          yaxis=dict(title='Jumlah Dokumen', tickfont=dict(size=13, color='#111827'), showgrid=True, gridcolor='rgba(0,0,0,0.12)', zeroline=False),
-                          bargap=0.28, margin=dict(t=80, l=60, r=40, b=150))
+fig_layanan.update_traces(textposition='outside')
+fig_layanan.update_layout(height=500, xaxis_tickangle=-25)
 st.plotly_chart(fig_layanan, use_container_width=True)
 
 # ======================================================
-# TOTAL PNBP PER JENIS LAYANAN (berdasarkan data terfilter)
+# TOTAL PNBP PER JENIS LAYANAN (jika kolom tersedia)
 # ======================================================
-st.markdown("## 💰 Total PNBP per Jenis Layanan")
-try:
-    pnbp_layanan = df_filtered.groupby('Jenis Layanan')['Jumlah PNBP'].sum().reset_index()
-    fig_pnbp = px.bar(pnbp_layanan, x='Jenis Layanan', y='Jumlah PNBP', text='Jumlah PNBP',
-                      title='Total PNBP Berdasarkan Jenis Layanan', template='plotly_white',
-                      color='Jumlah PNBP', color_continuous_scale='Blues')
-    fig_pnbp.update_traces(texttemplate='Rp %{text:,.0f}', textposition='outside',
-                           marker=dict(line=dict(color='#1e3a8a', width=1.5)))
-    fig_pnbp.update_layout(height=650,
-                           title=dict(text='Total PNBP Berdasarkan Jenis Layanan', x=0.5, font=dict(size=26, color='#111827')),
-                           font=dict(family="Segoe UI", size=14, color="#111827"),
-                           plot_bgcolor='rgba(255,255,255,0.80)', paper_bgcolor='rgba(255,255,255,0)',
-                           xaxis=dict(title='Jenis Layanan', tickangle=-25, tickfont=dict(size=12, color='#111827'), showgrid=False),
-                           yaxis=dict(title='Total PNBP', tickfont=dict(size=13, color='#111827'), showgrid=True, gridcolor='rgba(0,0,0,0.12)', zeroline=False),
-                           bargap=0.25, margin=dict(t=80, l=60, r=40, b=150))
-    st.plotly_chart(fig_pnbp, use_container_width=True, key="chart_pnbp_layanan")
-except Exception as e:
-    st.error(f"Terjadi error pada chart PNBP: {e}")
+if 'Jumlah PNBP' in df_filtered.columns:
+    st.markdown("## 💰 Total PNBP per Jenis Layanan (Terfilter)")
+    try:
+        pnbp_layanan = df_filtered.groupby('Jenis Layanan')['Jumlah PNBP'].sum().reset_index()
+        fig_pnbp = px.bar(pnbp_layanan, x='Jenis Layanan', y='Jumlah PNBP', text='Jumlah PNBP',
+                          title='Total PNBP Berdasarkan Jenis Layanan', template='plotly_white',
+                          color='Jumlah PNBP', color_continuous_scale='Blues')
+        fig_pnbp.update_traces(texttemplate='Rp %{text:,.0f}', textposition='outside')
+        fig_pnbp.update_layout(height=500, xaxis_tickangle=-25)
+        st.plotly_chart(fig_pnbp, use_container_width=True)
+    except Exception as e:
+        st.error(f"Terjadi error pada chart PNBP: {e}")
 
 # ======================================================
-# DOWNLOAD DATA (berdasarkan data terfilter)
+# DOWNLOAD DATA (terfilter)
 # ======================================================
 st.markdown("### 📥 Download Data")
 csv = df_filtered.to_csv(index=False).encode('utf-8')
