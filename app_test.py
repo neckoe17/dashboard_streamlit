@@ -1,30 +1,23 @@
 # ======================================================
-# DASHBOARD LPK PEKANBARU
-# ======================================================
-
-# ======================================================
 # IMPORT LIBRARY
 # ======================================================
 
 import base64
+import streamlit as st
 import pandas as pd
 import plotly.express as px
-import streamlit as st
-
 
 # ======================================================
-# KONFIGURASI HALAMAN
+# CONFIG PAGE
 # ======================================================
 
 st.set_page_config(
     page_title="Dashboard LPK Pekanbaru",
-    page_icon="📊",
     layout="wide"
 )
 
-
 # ======================================================
-# FUNCTION : BACKGROUND & UI STYLE
+# FUNCTION BACKGROUND + UI
 # ======================================================
 
 def add_bg_from_local(image_file):
@@ -37,10 +30,6 @@ def add_bg_from_local(image_file):
     st.markdown(
         f"""
         <style>
-
-        /* ======================================================
-           GLOBAL STYLE
-        ====================================================== */
 
         html, body, [class*="css"] {{
             font-family: 'Poppins', sans-serif;
@@ -57,16 +46,11 @@ def add_bg_from_local(image_file):
             font-weight: 700 !important;
         }}
 
-        /* ======================================================
-           BACKGROUND
-        ====================================================== */
-
         .stApp::before {{
             content: "";
             position: fixed;
             top: 0;
             left: 0;
-
             width: 100%;
             height: 100%;
 
@@ -96,78 +80,13 @@ def add_bg_from_local(image_file):
             background: transparent;
         }}
 
-        /* ======================================================
-           MAIN CONTAINER
-        ====================================================== */
-
         .block-container {{
             background: rgba(255,255,255,0.58);
-
             backdrop-filter: blur(18px);
-
             border-radius: 28px;
-
             padding: 2.5rem;
-
-            border:
-                1px solid rgba(255,255,255,0.35);
-
-            box-shadow:
-                0 10px 40px rgba(15,23,42,0.10);
-        }}
-
-        /* ======================================================
-           METRIC CARD
-        ====================================================== */
-
-        [data-testid="metric-container"] {{
-            background: rgba(255,255,255,0.72);
-
-            border-radius: 22px;
-
-            padding: 24px;
-
-            border:
-                1px solid rgba(255,255,255,0.4);
-
-            backdrop-filter: blur(12px);
-
-            box-shadow:
-                0 6px 22px rgba(15,23,42,0.08);
-        }}
-
-        /* ======================================================
-           SIDEBAR
-        ====================================================== */
-
-        section[data-testid="stSidebar"] {{
-            background: rgba(255,255,255,0.45);
-
-            backdrop-filter: blur(18px);
-        }}
-
-        /* ======================================================
-           BUTTON
-        ====================================================== */
-
-        .stButton > button {{
-            background:
-                linear-gradient(
-                    135deg,
-                    #2563eb,
-                    #3b82f6
-                );
-
-            color: white !important;
-
-            border-radius: 14px;
-
-            border: none;
-
-            padding:
-                0.65rem 1.4rem;
-
-            font-weight: 600;
+            border: 1px solid rgba(255,255,255,0.35);
+            box-shadow: 0 10px 40px rgba(15,23,42,0.10);
         }}
 
         </style>
@@ -175,58 +94,14 @@ def add_bg_from_local(image_file):
         unsafe_allow_html=True
     )
 
-
 # ======================================================
 # LOAD BACKGROUND
 # ======================================================
 
 add_bg_from_local("MRAP12.jpg")
 
-
 # ======================================================
-# GOOGLE SHEET CONFIG
-# ======================================================
-
-SHEET_ID = "1wumyUK_I_1L6jAPs--7BfTxuDOaNWtwyeND-iICG-Q0"
-GID = "1353375041"
-
-URL = (
-    f"https://docs.google.com/spreadsheets/d/"
-    f"{SHEET_ID}/export?format=csv&gid={GID}"
-)
-
-
-# ======================================================
-# FUNCTION : LOAD DATA
-# ======================================================
-
-@st.cache_data
-def load_data():
-
-    df = pd.read_csv(URL)
-
-    return df
-
-
-# ======================================================
-# LOAD DATAFRAME
-# ======================================================
-
-df = load_data()
-
-
-# ======================================================
-# DATA PREPROCESSING
-# ======================================================
-
-df['Jumlah PNBP'] = pd.to_numeric(
-    df['Jumlah PNBP'],
-    errors='coerce'
-)
-
-
-# ======================================================
-# HEADER DASHBOARD
+# TITLE
 # ======================================================
 
 st.title("📊 Dashboard Layanan Jenis LPK Pekanbaru")
@@ -236,12 +111,31 @@ Dashboard ini mengambil data langsung dari Google Spreadsheet
 dan menampilkan visualisasi interaktif menggunakan Streamlit.
 """)
 
+# ======================================================
+# GOOGLE SHEET
+# ======================================================
+
+sheet_id = "1wumyUK_I_1L6jAPs--7BfTxuDOaNWtwyeND-iICG-Q0"
+
+gid = "1353375041"
+
+url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid={gid}"
 
 # ======================================================
-# SIDEBAR FILTER
+# LOAD DATA
 # ======================================================
 
-st.sidebar.header("⚙️ Filter Dashboard")
+@st.cache_data
+def load_data():
+
+    df = pd.read_csv(url)
+
+    # Bersihkan nama kolom
+    df.columns = df.columns.str.strip()
+
+    return df
+
+df = load_data()
 
 # ======================================================
 # COPY DATAFRAME
@@ -250,50 +144,30 @@ st.sidebar.header("⚙️ Filter Dashboard")
 filtered_df = df.copy()
 
 # ======================================================
-# LOOP SELURUH KOLOM
+# SIDEBAR FILTER
 # ======================================================
 
-for column in df.columns:
+st.sidebar.header("⚙️ Filter Dashboard")
 
-    # ==========================================
-    # FILTER KOLOM OBJECT / CATEGORY
-    # ==========================================
+# ======================================================
+# FILTER NUMERIK
+# ======================================================
 
-    if df[column].dtype == 'object':
+st.sidebar.subheader("📊 Filter Data Numerik")
 
-        # Ambil unique value
-        unique_values = (
-            df[column]
-            .dropna()
-            .unique()
-            .tolist()
-        )
+numeric_columns = filtered_df.select_dtypes(
+    include=['int64', 'float64']
+).columns.tolist()
 
-        unique_values.sort()
+for column in numeric_columns:
 
-        selected_values = st.sidebar.multiselect(
-            f"Pilih {column}",
-            unique_values
-        )
+    try:
 
-        # Filter jika ada pilihan
-        if selected_values:
-
-            filtered_df = filtered_df[
-                filtered_df[column].isin(selected_values)
-            ]
-
-    # ==========================================
-    # FILTER KOLOM NUMERIK
-    # ==========================================
-
-    elif df[column].dtype in ['int64', 'float64']:
-
-        min_value = float(df[column].min())
-        max_value = float(df[column].max())
+        min_value = float(filtered_df[column].min())
+        max_value = float(filtered_df[column].max())
 
         selected_range = st.sidebar.slider(
-            f"Range {column}",
+            column,
             min_value=min_value,
             max_value=max_value,
             value=(min_value, max_value)
@@ -304,39 +178,88 @@ for column in df.columns:
             (filtered_df[column] <= selected_range[1])
         ]
 
+    except:
+        pass
+
 # ======================================================
-# HASIL FILTER
+# FILTER KATEGORI
 # ======================================================
 
-st.subheader("📄 Data Setelah Filter")
+st.sidebar.subheader("🗂️ Filter Data Kategori")
+
+non_numeric_columns = filtered_df.select_dtypes(
+    exclude=['int64', 'float64']
+).columns.tolist()
+
+for column in non_numeric_columns:
+
+    try:
+
+        unique_values = (
+            filtered_df[column]
+            .dropna()
+            .astype(str)
+            .unique()
+            .tolist()
+        )
+
+        unique_values.sort()
+
+        selected_values = st.sidebar.multiselect(
+            column,
+            unique_values
+        )
+
+        if selected_values:
+
+            filtered_df = filtered_df[
+                filtered_df[column]
+                .astype(str)
+                .isin(selected_values)
+            ]
+
+    except:
+        pass
+
+# ======================================================
+# KONVERSI NUMERIK
+# ======================================================
+
+if 'Jumlah PNBP' in filtered_df.columns:
+
+    filtered_df['Jumlah PNBP'] = pd.to_numeric(
+        filtered_df['Jumlah PNBP'],
+        errors='coerce'
+    )
+
+# ======================================================
+# DATAFRAME
+# ======================================================
+
+st.subheader("📄 Data Layanan LPK Pekanbaru")
 
 st.dataframe(
     filtered_df,
     use_container_width=True
 )
 
-
 # ======================================================
-# TAMPILKAN DATAFRAME
+# METRIC
 # ======================================================
 
-st.subheader("📄 Data Layanan")
+st.subheader("📌 Informasi Umum Layanan")
 
-st.dataframe(
-    df,
-    use_container_width=True
+jumlah_jenis_layanan = (
+    filtered_df['Jenis Layanan'].nunique()
+    if 'Jenis Layanan' in filtered_df.columns
+    else 0
 )
 
-
-# ======================================================
-# METRIC INFORMASI
-# ======================================================
-
-st.subheader("📌 Informasi Umum")
-
-jumlah_jenis_layanan = filtered_df['Jenis Layanan'].nunique()
-
-jumlah_jenis_ikan = filtered_df['Jenis Ikan'].nunique()
+jumlah_jenis_ikan = (
+    filtered_df['Jenis Ikan'].nunique()
+    if 'Jenis Ikan' in filtered_df.columns
+    else 0
+)
 
 jumlah_dokumen = len(filtered_df)
 
@@ -360,15 +283,16 @@ with col3:
         jumlah_dokumen
     )
 
-
 # ======================================================
-# FUNCTION : PIE CHART WILKER
+# PIE CHART WILKER
 # ======================================================
 
-def create_wilker_chart(dataframe):
+st.markdown("## 🥧 Persentase Wilker")
+
+if 'Wilker' in filtered_df.columns:
 
     wilker_count = (
-        dataframe['Wilker']
+        filtered_df['Wilker']
         .astype(str)
         .value_counts()
         .reset_index()
@@ -379,44 +303,33 @@ def create_wilker_chart(dataframe):
         'Jumlah'
     ]
 
-    fig = px.pie(
+    fig_pie = px.pie(
         wilker_count,
         names='Wilker',
         values='Jumlah',
         hole=0.45,
-        title='Persentase Wilker',
         template='plotly_white'
     )
 
-    fig.update_traces(
+    fig_pie.update_traces(
         textinfo='percent+label'
     )
 
-    return fig
-
-
-# ======================================================
-# PIE CHART WILKER
-# ======================================================
-
-st.subheader("🥧 Persentase Wilker")
-
-fig_pie = create_wilker_chart(filtered_df)
-
-st.plotly_chart(
-    fig_pie,
-    use_container_width=True
-)
-
+    st.plotly_chart(
+        fig_pie,
+        use_container_width=True
+    )
 
 # ======================================================
-# FUNCTION : BAR CHART JENIS LAYANAN
+# BAR CHART LAYANAN
 # ======================================================
 
-def create_layanan_chart(dataframe):
+st.markdown("## 📊 Jumlah Setiap Jenis Layanan")
+
+if 'Jenis Layanan' in filtered_df.columns:
 
     layanan_count = (
-        dataframe['Jenis Layanan']
+        filtered_df['Jenis Layanan']
         .value_counts()
         .reset_index()
     )
@@ -426,95 +339,86 @@ def create_layanan_chart(dataframe):
         'Jumlah'
     ]
 
-    fig = px.bar(
+    fig_layanan = px.bar(
         layanan_count,
         x='Jenis Layanan',
         y='Jumlah',
         text='Jumlah',
-        title='Jumlah Dokumen per Jenis Layanan',
-        template='plotly_white',
         color='Jumlah',
-        color_continuous_scale='Blues'
+        color_continuous_scale='Blues',
+        template='plotly_white'
     )
 
-    return fig
+    fig_layanan.update_traces(
+        textposition='outside'
+    )
 
-
-# ======================================================
-# BAR CHART JENIS LAYANAN
-# ======================================================
-
-st.subheader("📊 Jumlah Jenis Layanan")
-
-fig_layanan = create_layanan_chart(filtered_df)
-
-st.plotly_chart(
-    fig_layanan,
-    use_container_width=True
-)
-
+    st.plotly_chart(
+        fig_layanan,
+        use_container_width=True
+    )
 
 # ======================================================
-# FUNCTION : CHART PNBP
+# PNBP CHART
 # ======================================================
 
-def create_pnbp_chart(dataframe):
+st.markdown("## 💰 Total PNBP per Jenis Layanan")
+
+if (
+    'Jenis Layanan' in filtered_df.columns and
+    'Jumlah PNBP' in filtered_df.columns
+):
 
     pnbp_layanan = (
-        dataframe.groupby('Jenis Layanan')['Jumlah PNBP']
+        filtered_df.groupby('Jenis Layanan')['Jumlah PNBP']
         .sum()
         .reset_index()
     )
 
-    fig = px.bar(
+    fig_pnbp = px.bar(
         pnbp_layanan,
         x='Jenis Layanan',
         y='Jumlah PNBP',
         text='Jumlah PNBP',
-        title='Total PNBP Berdasarkan Jenis Layanan',
-        template='plotly_white',
         color='Jumlah PNBP',
-        color_continuous_scale='Blues'
+        color_continuous_scale='Blues',
+        template='plotly_white'
     )
 
-    fig.update_traces(
+    fig_pnbp.update_traces(
         texttemplate='Rp %{text:,.0f}',
         textposition='outside'
     )
 
-    return fig
-
+    st.plotly_chart(
+        fig_pnbp,
+        use_container_width=True
+    )
 
 # ======================================================
-# CHART TOTAL PNBP
+# DOWNLOAD
 # ======================================================
 
-st.subheader("💰 Total PNBP")
+st.markdown("### 📥 Download Data")
 
-fig_pnbp = create_pnbp_chart(filtered_df)
+csv = filtered_df.to_csv(
+    index=False
+).encode('utf-8')
 
-st.plotly_chart(
-    fig_pnbp,
-    use_container_width=True
+st.download_button(
+    label="⬇️ Download Data Filter (.CSV)",
+    data=csv,
+    file_name='data_layanan_lpk_pekanbaru.csv',
+    mime='text/csv'
 )
-
 
 # ======================================================
 # FOOTER
 # ======================================================
 
 st.markdown("---")
-
 st.caption("Loka Pengelolaan Kelautan Pekanbaru")
 
-
-# ======================================================
-# BUTTON REFRESH
-# ======================================================
-
-if st.button("🔄 Refresh Data"):
-
+if st.button("Refresh Data"):
     st.cache_data.clear()
-
     st.rerun()
-st.download_button()
