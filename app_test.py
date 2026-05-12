@@ -146,7 +146,7 @@ def add_bg_from_local(image_file):
 
             letter-spacing: 0.5px;
 
-            #text-shadow:
+            text-shadow:
                 #1px 1px 2px rgba(255,255,255,0.4);
 
         }}
@@ -588,7 +588,7 @@ try:
 
         title_x=0.5,
 
-        title_font_size=24,
+        title_font_size=20,
 
         font=dict(
             family="Segoe UI",
@@ -783,136 +783,159 @@ st.plotly_chart(
 
 st.markdown("## 💰 Total PNBP per Jenis Layanan")
 
-# ======================================================
-# GROUPING DATA
-# ======================================================
+try:
 
-pnbp_layanan = (
-    df.groupby('Jenis Layanan')['Jumlah PNBP']
-    .sum()
-    .reset_index()
-)
+    # ======================================================
+    # PASTIKAN KOLOM NUMERIK
+    # ======================================================
 
-# ======================================================
-# MEMBUAT BAR CHART
-# ======================================================
-
-fig_pnbp = px.bar(
-    pnbp_layanan,
-    x='Jenis Layanan',
-    y='Jumlah PNBP',
-    text='Jumlah PNBP',
-    template='plotly_white',
-    color='Jumlah PNBP',
-    color_continuous_scale='Blues'
-)
-
-# ======================================================
-# CUSTOM TEXT DI BATANG
-# ======================================================
-
-fig_pnbp.update_traces(
-
-    texttemplate='Rp %{text:,.0f}',
-
-    textposition='outside',
-
-    marker=dict(
-        color='#2563eb',
-        line=dict(
-            color='#1e3a8a',
-            width=1.5
-        )
-    ),
-
-    hoverlabel=dict(
-        bgcolor='white',
-        font_size=14,
-        font_color='black'
+    df['Jumlah PNBP'] = pd.to_numeric(
+        df['Jumlah PNBP'],
+        errors='coerce'
     )
 
-)
+    # ======================================================
+    # GROUPING DATA
+    # ======================================================
 
-# ======================================================
-# CUSTOM LAYOUT
-# ======================================================
+    pnbp_layanan = (
+        df.groupby('Jenis Layanan')['Jumlah PNBP']
+        .sum()
+        .reset_index()
+    )
 
-fig_pnbp.update_layout(
+    # ======================================================
+    # MEMBUAT BAR CHART
+    # ======================================================
 
-    height=650,
+    fig_pnbp = px.bar(
 
-    title=dict(
-        text='Total PNBP Berdasarkan Jenis Layanan',
-        x=0.5,
+        pnbp_layanan,
+
+        x='Jenis Layanan',
+
+        y='Jumlah PNBP',
+
+        text='Jumlah PNBP',
+
+        title='Total PNBP Berdasarkan Jenis Layanan',
+
+        template='plotly_white',
+
+        color='Jumlah PNBP',
+
+        color_continuous_scale='Blues'
+
+    )
+
+    # ======================================================
+    # CUSTOM BATANG
+    # ======================================================
+
+    fig_pnbp.update_traces(
+
+        texttemplate='Rp %{text:,.0f}',
+
+        textposition='outside',
+
+        marker=dict(
+            line=dict(
+                color='#1e3a8a',
+                width=1.5
+            )
+        ),
+
+        hoverlabel=dict(
+            bgcolor='white',
+            font_size=14,
+            font_color='black'
+        )
+
+    )
+
+    # ======================================================
+    # CUSTOM LAYOUT
+    # ======================================================
+
+    fig_pnbp.update_layout(
+
+        height=650,
+
+        title=dict(
+            text='Total PNBP Berdasarkan Jenis Layanan',
+            x=0.5,
+            font=dict(
+                size=26,
+                color='#111827'
+            )
+        ),
+
         font=dict(
-            size=26,
-            color='#111827'
+            family="Segoe UI",
+            size=14,
+            color="#111827"
+        ),
+
+        plot_bgcolor='rgba(255,255,255,0.80)',
+
+        paper_bgcolor='rgba(255,255,255,0)',
+
+        xaxis=dict(
+
+            title='Jenis Layanan',
+
+            tickangle=-25,
+
+            tickfont=dict(
+                size=12,
+                color='#111827'
+            ),
+
+            showgrid=False
+
+        ),
+
+        yaxis=dict(
+
+            title='Total PNBP',
+
+            tickfont=dict(
+                size=13,
+                color='#111827'
+            ),
+
+            showgrid=True,
+
+            gridcolor='rgba(0,0,0,0.12)',
+
+            zeroline=False
+
+        ),
+
+        bargap=0.25,
+
+        margin=dict(
+            t=80,
+            l=60,
+            r=40,
+            b=150
         )
-    ),
 
-    font=dict(
-        family="Segoe UI",
-        size=14,
-        color="#111827"
-    ),
-
-    # Background chart
-    plot_bgcolor='rgba(255,255,255,0.75)',
-
-    paper_bgcolor='rgba(255,255,255,0)',
-
-    # Grid
-    yaxis=dict(
-
-        title='Total PNBP',
-
-        showgrid=True,
-
-        gridcolor='rgba(0,0,0,0.15)',
-
-        gridwidth=1,
-
-        zeroline=False,
-
-        tickfont=dict(
-            size=13,
-            color='#111827'
-        )
-
-    ),
-
-    # Sumbu X
-    xaxis=dict(
-
-        title='Jenis Layanan',
-
-        tickangle=-25,
-
-        tickfont=dict(
-            size=12,
-            color='#111827'
-        )
-
-    ),
-
-    bargap=0.25,
-
-    margin=dict(
-        t=80,
-        l=50,
-        r=40,
-        b=140
     )
 
-)
-# ======================================================
-# TAMPILKAN CHART
-# ======================================================
+    # ======================================================
+    # TAMPILKAN CHART
+    # ======================================================
 
-st.plotly_chart(
-    fig_pnbp,
-    use_container_width=True
-)
+    st.plotly_chart(
+        fig_pnbp,
+        use_container_width=True,
+        key="chart_pnbp_layanan"
+    )
+
+except Exception as e:
+
+    st.error(f"Terjadi error pada chart PNBP: {e}")
 
 # ======================================================
 # GRAFIK WAKTU LAYANAN
