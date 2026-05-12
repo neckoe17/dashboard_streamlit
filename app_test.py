@@ -640,46 +640,133 @@ layanan_count.columns = [
 # ======================================================
 
 fig_layanan = px.bar(
+
     layanan_count,
+
     x='Jenis Layanan',
+
     y='Jumlah',
+
     text='Jumlah',
+
     title='Jumlah Dokumen per Jenis Layanan',
-    template='plotly_white'
+
+    template='plotly_white',
+
+    color='Jumlah',
+
+    color_continuous_scale='Blues'
+
 )
 
 # ======================================================
-# CUSTOM TAMPILAN CHART
+# CUSTOM BATANG / TEXT
 # ======================================================
 
 fig_layanan.update_traces(
-    textposition='outside'
+
+    textposition='outside',
+
+    textfont=dict(
+        size=14,
+        color='#111827'
+    ),
+
+    marker=dict(
+        line=dict(
+            color='#1e3a8a',
+            width=1.5
+        )
+    ),
+
+    hoverlabel=dict(
+        bgcolor='white',
+        font_size=14,
+        font_color='black'
+    )
+
 )
+
+# ======================================================
+# CUSTOM LAYOUT
+# ======================================================
 
 fig_layanan.update_layout(
 
-    height=520,
+    height=650,
 
-    title_x=0.5,
-
-    title_font_size=24,
+    title=dict(
+        text='Jumlah Dokumen per Jenis Layanan',
+        x=0.5,
+        font=dict(
+            size=28,
+            color='#111827'
+        )
+    ),
 
     font=dict(
         family="Segoe UI",
         size=14,
-        color="#000000"
+        color="#111827"
     ),
 
-    plot_bgcolor='rgba(255,255,255,0)',
+    # Background chart
+    plot_bgcolor='rgba(255,255,255,0.80)',
 
     paper_bgcolor='rgba(255,255,255,0)',
 
-    xaxis_title='Jenis Layanan',
+    # Sumbu X
+    xaxis=dict(
 
-    yaxis_title='Jumlah Dokumen',
+        title='Jenis Layanan',
 
-    bargap=0.3
+        tickangle=-25,
 
+        tickfont=dict(
+            size=12,
+            color='#111827'
+        ),
+
+        showgrid=False
+
+    ),
+
+    # Sumbu Y
+    yaxis=dict(
+
+        title='Jumlah Dokumen',
+
+        tickfont=dict(
+            size=13,
+            color='#111827'
+        ),
+
+        showgrid=True,
+
+        gridcolor='rgba(0,0,0,0.12)',
+
+        zeroline=False
+
+    ),
+
+    bargap=0.28,
+
+    margin=dict(
+        t=80,
+        l=60,
+        r=40,
+        b=150
+    )
+
+)
+
+# ======================================================
+# TAMPILKAN CHART
+# ======================================================
+
+st.plotly_chart(
+    fig_layanan,
+    use_container_width=True
 )
 
 # ======================================================
