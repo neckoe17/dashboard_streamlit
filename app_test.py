@@ -570,7 +570,7 @@ try:
         values='Jumlah',
         hole=0.45,
         title='Persentase Wilker',
-        template='plotly_drakred'
+        template='plotly_white'
     )
 
     # ======================================================
@@ -716,7 +716,7 @@ fig_pnbp = px.bar(
     y='Jumlah PNBP',
     text='Jumlah PNBP',
     title='Total PNBP Berdasarkan Jenis Layanan',
-    template='plotly_white'
+    template='plotly_drakred'
 )
 
 # ======================================================
