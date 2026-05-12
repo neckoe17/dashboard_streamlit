@@ -188,21 +188,35 @@ def load_data():
 df = load_data()
 
 # ======================================================
-# DETEKSI KOLOM TANGGAL (jika ada)
+# PERSIAPAN FILTER BULAN (deteksi kolom bulan atau tanggal)
 # ======================================================
-date_col = None
-df['Tahun-Bulan'] = None  # default
+bulan_col = None
+df['bulan_filter_display'] = None  # untuk keperluan filter
+
+# Cek apakah ada kolom bernama 'Bulan' (case insensitive)
 for col in df.columns:
-    if 'tanggal' in col.lower() or 'date' in col.lower() or 'tgl' in col.lower() or 'periode' in col.lower():
-        # Coba konversi
-        try:
-            df[col] = pd.to_datetime(df[col], errors='coerce')
-            if df[col].notna().any():
-                date_col = col
-                df['Tahun-Bulan'] = df[col].dt.to_period('M').astype(str)
-                break
-        except:
-            continue
+    if col.lower() == 'bulan':
+        bulan_col = col
+        # Gunakan nilai asli dari kolom tersebut sebagai display
+        df['bulan_filter_display'] = df[col].astype(str)
+        break
+
+# Jika tidak ada, cari kolom tanggal
+if bulan_col is None:
+    for col in df.columns:
+        if 'tanggal' in col.lower() or 'date' in col.lower() or 'tgl' in col.lower() or 'periode' in col.lower():
+            try:
+                df[col] = pd.to_datetime(df[col], errors='coerce')
+                if df[col].notna().any():
+                    # Buat kolom display dengan format "Jan 2024" (atau sesuai)
+                    df['bulan_filter_display'] = df[col].dt.strftime('%b %Y')  # contoh: "Jan 2024"
+                    bulan_col = col
+                    break
+            except:
+                continue
+
+# Jika masih tidak ada, beri pesan bahwa filter bulan tidak tersedia
+filter_bulan_tersedia = bulan_col is not None
 
 # ======================================================
 # SIDEBAR FILTER
@@ -233,15 +247,19 @@ selected_wilker = st.sidebar.selectbox(
     index=0
 )
 
-# 4. Filter Bulan (dropdown, jika ada kolom tanggal)
-bulan_options = ["Semua"]
-if date_col is not None:
-    bulan_options = ["Semua"] + sorted(df['Tahun-Bulan'].dropna().unique().tolist())
-selected_bulan = st.sidebar.selectbox(
-    "📅 Bulan (Format: YYYY-MM)",
-    options=bulan_options,
-    index=0
-)
+# 4. Filter Bulan (dropdown single select) - menggunakan kolom bulan_filter_display
+if filter_bulan_tersedia:
+    # Ambil nilai unik yang tidak null dari bulan_filter_display
+    bulan_values = sorted(df['bulan_filter_display'].dropna().unique().tolist())
+    bulan_options = ["Semua"] + bulan_values
+    selected_bulan = st.sidebar.selectbox(
+        "📅 Bulan",
+        options=bulan_options,
+        index=0
+    )
+else:
+    selected_bulan = "Semua"
+    st.sidebar.info("Tidak ditemukan kolom bulan atau tanggal. Filter bulan tidak tersedia.")
 
 # 5. Pilihan Kolom Numerik untuk Visualisasi (dropdown)
 numeric_columns = df.select_dtypes(include=['int64', 'float64']).columns.tolist()
@@ -274,9 +292,9 @@ if selected_ikan != "Semua":
 if selected_wilker != "Semua":
     df_filtered = df_filtered[df_filtered['Wilker'].astype(str) == selected_wilker]
 
-# Filter Bulan
-if selected_bulan != "Semua" and date_col is not None:
-    df_filtered = df_filtered[df_filtered['Tahun-Bulan'] == selected_bulan]
+# Filter Bulan (jika filter tersedia dan pilihan bukan "Semua")
+if filter_bulan_tersedia and selected_bulan != "Semua":
+    df_filtered = df_filtered[df_filtered['bulan_filter_display'] == selected_bulan]
 
 # ======================================================
 # MENAMPILKAN DATA YANG SUDAH DIFILTER
@@ -354,19 +372,23 @@ if numeric_columns and selected_numeric != 'Tidak ada kolom numerik':
         st.plotly_chart(fig, use_container_width=True)
 
     with tab3:
-        if date_col is not None and 'Tahun-Bulan' in df_filtered.columns:
-            agg_data = df_filtered.groupby('Tahun-Bulan')[selected_numeric].sum().reset_index()
-            agg_data = agg_data.sort_values('Tahun-Bulan')
-            fig = px.line(agg_data, x='Tahun-Bulan', y=selected_numeric,
-                          markers=True,
-                          title=f"Trend {selected_numeric} per Bulan",
-                          template='plotly_white',
-                          color_discrete_sequence=['#3b82f6'])
-            fig.update_traces(line=dict(width=3), marker=dict(size=8))
-            fig.update_layout(height=500)
-            st.plotly_chart(fig, use_container_width=True)
+        if filter_bulan_tersedia:
+            # Gunakan kolom bulan_filter_display untuk grouping
+            if 'bulan_filter_display' in df_filtered.columns:
+                agg_data = df_filtered.groupby('bulan_filter_display')[selected_numeric].sum().reset_index()
+                agg_data = agg_data.sort_values('bulan_filter_display')
+                fig = px.line(agg_data, x='bulan_filter_display', y=selected_numeric,
+                              markers=True,
+                              title=f"Trend {selected_numeric} per Bulan",
+                              template='plotly_white',
+                              color_discrete_sequence=['#3b82f6'])
+                fig.update_traces(line=dict(width=3), marker=dict(size=8))
+                fig.update_layout(height=500)
+                st.plotly_chart(fig, use_container_width=True)
+            else:
+                st.info("Tidak ada data bulan untuk ditampilkan.")
         else:
-            st.info("Tidak ada kolom tanggal yang valid untuk filter bulan.")
+            st.info("Tidak ada kolom bulan atau tanggal yang valid.")
 
 # ======================================================
 # JUMLAH DOKUMEN PER JENIS LAYANAN (bar chart)
