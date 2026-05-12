@@ -50,7 +50,7 @@ def add_bg_from_local(image_file):
 
             font-family: 'Poppins', sans-serif;
 
-            color: #1e293b;
+            color: #000000;
 
         }}
 
