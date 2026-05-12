@@ -209,23 +209,31 @@ for col in df.columns:
 # ======================================================
 st.sidebar.header("🔍 Filter Data")
 
-# 1. Filter Jenis Layanan (multiselect)
-jenis_layanan_options = sorted(df['Jenis Layanan'].dropna().unique().tolist())
-selected_layanan = st.sidebar.multiselect(
+# 1. Filter Jenis Layanan (dropdown single select)
+jenis_layanan_options = ["Semua"] + sorted(df['Jenis Layanan'].dropna().unique().tolist())
+selected_layanan = st.sidebar.selectbox(
     "📋 Jenis Layanan",
     options=jenis_layanan_options,
-    default=jenis_layanan_options
+    index=0
 )
 
-# 2. Filter Jenis Ikan (multiselect)
-jenis_ikan_options = sorted(df['Jenis Ikan'].dropna().unique().tolist())
-selected_ikan = st.sidebar.multiselect(
+# 2. Filter Jenis Ikan (dropdown single select)
+jenis_ikan_options = ["Semua"] + sorted(df['Jenis Ikan'].dropna().unique().tolist())
+selected_ikan = st.sidebar.selectbox(
     "🐟 Jenis Ikan",
     options=jenis_ikan_options,
-    default=jenis_ikan_options
+    index=0
 )
 
-# 3. Filter Bulan (dropdown, jika ada kolom tanggal)
+# 3. Filter Wilker (dropdown single select)
+wilker_options = ["Semua"] + sorted(df['Wilker'].dropna().astype(str).unique().tolist())
+selected_wilker = st.sidebar.selectbox(
+    "📍 Wilker",
+    options=wilker_options,
+    index=0
+)
+
+# 4. Filter Bulan (dropdown, jika ada kolom tanggal)
 bulan_options = ["Semua"]
 if date_col is not None:
     bulan_options = ["Semua"] + sorted(df['Tahun-Bulan'].dropna().unique().tolist())
@@ -235,7 +243,7 @@ selected_bulan = st.sidebar.selectbox(
     index=0
 )
 
-# 4. Pilihan Kolom Numerik untuk Visualisasi (dropdown)
+# 5. Pilihan Kolom Numerik untuk Visualisasi (dropdown)
 numeric_columns = df.select_dtypes(include=['int64', 'float64']).columns.tolist()
 if 'Jumlah PNBP' in numeric_columns:
     default_numeric = 'Jumlah PNBP'
@@ -254,13 +262,17 @@ selected_numeric = st.sidebar.selectbox(
 # ======================================================
 df_filtered = df.copy()
 
-# Filter Jenis Layanan
-if selected_layanan:
-    df_filtered = df_filtered[df_filtered['Jenis Layanan'].isin(selected_layanan)]
+# Filter Jenis Layanan (jika bukan "Semua")
+if selected_layanan != "Semua":
+    df_filtered = df_filtered[df_filtered['Jenis Layanan'] == selected_layanan]
 
-# Filter Jenis Ikan
-if selected_ikan:
-    df_filtered = df_filtered[df_filtered['Jenis Ikan'].isin(selected_ikan)]
+# Filter Jenis Ikan (jika bukan "Semua")
+if selected_ikan != "Semua":
+    df_filtered = df_filtered[df_filtered['Jenis Ikan'] == selected_ikan]
+
+# Filter Wilker (jika bukan "Semua")
+if selected_wilker != "Semua":
+    df_filtered = df_filtered[df_filtered['Wilker'].astype(str) == selected_wilker]
 
 # Filter Bulan
 if selected_bulan != "Semua" and date_col is not None:
