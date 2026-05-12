@@ -238,18 +238,81 @@ dan menampilkan visualisasi interaktif menggunakan Streamlit.
 
 
 # ======================================================
-# SIDEBAR
+# SIDEBAR FILTER
 # ======================================================
 
 st.sidebar.header("⚙️ Filter Dashboard")
 
-numeric_columns = df.select_dtypes(
-    include=['int64', 'float64']
-).columns.tolist()
+# ======================================================
+# COPY DATAFRAME
+# ======================================================
 
-selected_column = st.sidebar.selectbox(
-    "Pilih Kolom Numerik",
-    numeric_columns
+filtered_df = df.copy()
+
+# ======================================================
+# LOOP SELURUH KOLOM
+# ======================================================
+
+for column in df.columns:
+
+    # ==========================================
+    # FILTER KOLOM OBJECT / CATEGORY
+    # ==========================================
+
+    if df[column].dtype == 'object':
+
+        # Ambil unique value
+        unique_values = (
+            df[column]
+            .dropna()
+            .unique()
+            .tolist()
+        )
+
+        unique_values.sort()
+
+        selected_values = st.sidebar.multiselect(
+            f"Pilih {column}",
+            unique_values
+        )
+
+        # Filter jika ada pilihan
+        if selected_values:
+
+            filtered_df = filtered_df[
+                filtered_df[column].isin(selected_values)
+            ]
+
+    # ==========================================
+    # FILTER KOLOM NUMERIK
+    # ==========================================
+
+    elif df[column].dtype in ['int64', 'float64']:
+
+        min_value = float(df[column].min())
+        max_value = float(df[column].max())
+
+        selected_range = st.sidebar.slider(
+            f"Range {column}",
+            min_value=min_value,
+            max_value=max_value,
+            value=(min_value, max_value)
+        )
+
+        filtered_df = filtered_df[
+            (filtered_df[column] >= selected_range[0]) &
+            (filtered_df[column] <= selected_range[1])
+        ]
+
+# ======================================================
+# HASIL FILTER
+# ======================================================
+
+st.subheader("📄 Data Setelah Filter")
+
+st.dataframe(
+    filtered_df,
+    use_container_width=True
 )
 
 
@@ -271,11 +334,11 @@ st.dataframe(
 
 st.subheader("📌 Informasi Umum")
 
-jumlah_jenis_layanan = df['Jenis Layanan'].nunique()
+jumlah_jenis_layanan = filtered_df['Jenis Layanan'].nunique()
 
-jumlah_jenis_ikan = df['Jenis Ikan'].nunique()
+jumlah_jenis_ikan = filtered_df['Jenis Ikan'].nunique()
 
-jumlah_dokumen = len(df)
+jumlah_dokumen = len(filtered_df)
 
 col1, col2, col3 = st.columns(3)
 
@@ -338,7 +401,7 @@ def create_wilker_chart(dataframe):
 
 st.subheader("🥧 Persentase Wilker")
 
-fig_pie = create_wilker_chart(df)
+fig_pie = create_wilker_chart(filtered_df)
 
 st.plotly_chart(
     fig_pie,
@@ -383,7 +446,7 @@ def create_layanan_chart(dataframe):
 
 st.subheader("📊 Jumlah Jenis Layanan")
 
-fig_layanan = create_layanan_chart(df)
+fig_layanan = create_layanan_chart(filtered_df)
 
 st.plotly_chart(
     fig_layanan,
@@ -428,7 +491,7 @@ def create_pnbp_chart(dataframe):
 
 st.subheader("💰 Total PNBP")
 
-fig_pnbp = create_pnbp_chart(df)
+fig_pnbp = create_pnbp_chart(filtered_df)
 
 st.plotly_chart(
     fig_pnbp,
@@ -454,3 +517,4 @@ if st.button("🔄 Refresh Data"):
     st.cache_data.clear()
 
     st.rerun()
+st.download_button()
