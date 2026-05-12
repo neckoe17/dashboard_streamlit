@@ -146,8 +146,8 @@ def add_bg_from_local(image_file):
 
             letter-spacing: 0.5px;
 
-            text-shadow:
-                1px 1px 2px rgba(255,255,255,0.4);
+            #text-shadow:
+                #1px 1px 2px rgba(255,255,255,0.4);
 
         }}
 
