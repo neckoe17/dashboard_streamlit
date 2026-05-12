@@ -715,8 +715,9 @@ fig_pnbp = px.bar(
     x='Jenis Layanan',
     y='Jumlah PNBP',
     text='Jumlah PNBP',
-    title='Total PNBP Berdasarkan Jenis Layanan',
-    template='plotly_drakred'
+    template='plotly_white',
+    color='Jumlah PNBP',
+    color_continuous_scale='Blues'
 )
 
 # ======================================================
@@ -724,8 +725,25 @@ fig_pnbp = px.bar(
 # ======================================================
 
 fig_pnbp.update_traces(
+
     texttemplate='Rp %{text:,.0f}',
-    textposition='outside'
+
+    textposition='outside',
+
+    marker=dict(
+        color='#2563eb',
+        line=dict(
+            color='#1e3a8a',
+            width=1.5
+        )
+    ),
+
+    hoverlabel=dict(
+        bgcolor='white',
+        font_size=14,
+        font_color='black'
+    )
+
 )
 
 # ======================================================
@@ -734,30 +752,72 @@ fig_pnbp.update_traces(
 
 fig_pnbp.update_layout(
 
-    height=520,
+    height=650,
 
-    title_x=0.5,
-
-    title_font_size=24,
+    title=dict(
+        text='Total PNBP Berdasarkan Jenis Layanan',
+        x=0.5,
+        font=dict(
+            size=26,
+            color='#111827'
+        )
+    ),
 
     font=dict(
         family="Segoe UI",
         size=14,
-        color="#000000"
+        color="#111827"
     ),
 
-    plot_bgcolor='rgba(255,255,255,0)',
+    # Background chart
+    plot_bgcolor='rgba(255,255,255,0.75)',
 
     paper_bgcolor='rgba(255,255,255,0)',
 
-    xaxis_title='Jenis Layanan',
+    # Grid
+    yaxis=dict(
 
-    yaxis_title='Total PNBP',
+        title='Total PNBP',
 
-    bargap=0.3
+        showgrid=True,
+
+        gridcolor='rgba(0,0,0,0.15)',
+
+        gridwidth=1,
+
+        zeroline=False,
+
+        tickfont=dict(
+            size=13,
+            color='#111827'
+        )
+
+    ),
+
+    # Sumbu X
+    xaxis=dict(
+
+        title='Jenis Layanan',
+
+        tickangle=-25,
+
+        tickfont=dict(
+            size=12,
+            color='#111827'
+        )
+
+    ),
+
+    bargap=0.25,
+
+    margin=dict(
+        t=80,
+        l=50,
+        r=40,
+        b=140
+    )
 
 )
-
 # ======================================================
 # TAMPILKAN CHART
 # ======================================================
