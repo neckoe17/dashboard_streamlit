@@ -773,10 +773,10 @@ st.plotly_chart(
 # TAMPILKAN CHART
 # ======================================================
 
-st.plotly_chart(
-    fig_layanan,
-    use_container_width=True
-)
+# st.plotly_chart(
+#     fig_layanan,
+#     use_container_width=True
+# )
 # ======================================================
 # TOTAL PNBP PER JENIS LAYANAN
 # ======================================================
