@@ -360,7 +360,7 @@ add_bg_from_local("MRAP12.jpg")
 # JUDUL DASHBOARD
 # ======================================================
 
-st.title("📊 ashboard Layanan Jenis LPK Pekanbaru")
+st.title("📊 Dashboard Layanan Jenis LPK Pekanbaru")
 
 st.markdown("""
 Dashboard ini mengambil data langsung dari Google Spreadsheet
