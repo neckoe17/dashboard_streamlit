@@ -11,17 +11,11 @@ import plotly.express as px
 # KONFIGURASI HALAMAN
 # ======================================================
 
-st.set_page_config(
-    page_title="Dashboard Google Spreadsheet",
-    page_icon="📊",
-    layout="wide"
-)
-# ======================================================
-# IMPORT
-# ======================================================
-
-import streamlit as st
-import base64
+# st.set_page_config(
+#     page_title="Dashboard Layanan Jenis LPK Pekanbaru",
+#     page_icon="📊",
+#     layout="wide"
+# )
 
 # ======================================================
 # FUNCTION BACKGROUND + ELEGANT UI
@@ -366,7 +360,7 @@ add_bg_from_local("MRAP12.jpg")
 # JUDUL DASHBOARD
 # ======================================================
 
-st.title("📊 Dashboard Data Google Spreadsheet")
+st.title("📊 ashboard Layanan Jenis LPK Pekanbaru")
 
 st.markdown("""
 Dashboard ini mengambil data langsung dari Google Spreadsheet
