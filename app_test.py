@@ -850,7 +850,7 @@ except Exception as e:
 
 st.markdown("### 📥 Download Data")
 
-csv = filtered_df.to_csv(
+csv = df.to_csv(
     index=False
 ).encode('utf-8')
 
