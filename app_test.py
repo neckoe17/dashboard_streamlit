@@ -845,6 +845,22 @@ except Exception as e:
     st.error(f"Terjadi error pada chart PNBP: {e}")
 
 # ======================================================
+# DOWNLOAD
+# ======================================================
+
+st.markdown("### 📥 Download Data")
+
+csv = filtered_df.to_csv(
+    index=False
+).encode('utf-8')
+
+st.download_button(
+    label="⬇️ Download Data Filter (.CSV)",
+    data=csv,
+    file_name='data_layanan_lpk_pekanbaru.csv',
+    mime='text/csv'
+)
+# ======================================================
 # FOOTER
 # ======================================================
 
@@ -853,3 +869,4 @@ st.caption("Loka Pengelolaan Kelautan Pekanbaru")
 
 if st.button("Refresh Data"):
     st.cache_data.clear()
+    st.rerun()
