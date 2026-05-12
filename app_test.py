@@ -570,7 +570,7 @@ try:
         values='Jumlah',
         hole=0.45,
         title='Persentase Wilker',
-        template='plotly_white'
+        template='plotly_skyblue'
     )
 
     # ======================================================
