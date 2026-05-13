@@ -322,16 +322,18 @@ with col3:
     st.metric("Jumlah Dokumen Diterbitkan", jumlah_dokumen)
 
 # ======================================================
-# PETA SUMATERA CHOROPLETH (Berdasarkan Provinsi)
+# PETA SUMATERA DENGAN GRADASI WARNA (CHOROPLETH ATAU MARKER)
 # ======================================================
 st.markdown("## 🗺️ Sebaran Data Layanan per Provinsi di Sumatera")
 
 try:
     import requests
+    import json
     import plotly.express as px
+    import plotly.graph_objects as go
 
     # ------------------------------------------------------------------
-    # 1. Mapping Wilker ke nama provinsi standar (cocok dengan geojson)
+    # 1. Mapping Wilker ke provinsi
     # ------------------------------------------------------------------
     wilker_to_provinsi = {
         "aceh": "Aceh",
@@ -365,66 +367,106 @@ try:
                 return prov
         return None
 
-    # Tambah kolom provinsi
     df_filtered['provinsi'] = df_filtered['Wilker'].apply(map_wilker)
-
-    # Agregasi jumlah dokumen per provinsi
     prov_counts = df_filtered[df_filtered['provinsi'].notna()].groupby('provinsi').size().reset_index(name='jumlah')
-    total = prov_counts['jumlah'].sum()
-    prov_counts['persen'] = (prov_counts['jumlah'] / total) * 100
-
     if prov_counts.empty:
-        st.warning("Tidak ada data provinsi yang cocok. Periksa kembali nama Wilker.")
+        st.warning("Tidak ada data provinsi yang cocok.")
     else:
-        # ------------------------------------------------------------------
-        # 2. Ambil GeoJSON provinsi Indonesia (sumber publik)
-        # ------------------------------------------------------------------
-        geojson_url = "https://raw.githubusercontent.com/putuwaw/indonesia-geojson/master/geojson/provinces.json"
-        response = requests.get(geojson_url)
-        geojson_data = response.json()
+        total = prov_counts['jumlah'].sum()
+        prov_counts['persen'] = (prov_counts['jumlah'] / total) * 100
 
-        # Filter hanya provinsi Sumatera
-        sumatera_list = [
-            "Aceh", "Sumatera Utara", "Sumatera Barat", "Riau", "Kepulauan Riau",
-            "Jambi", "Sumatera Selatan", "Bengkulu", "Lampung", "Kepulauan Bangka Belitung"
+        # Koordinat pusat provinsi (lat, lon) untuk fallback marker
+        prov_center = {
+            "Aceh": (4.6951, 96.7494),
+            "Sumatera Utara": (2.1154, 99.5451),
+            "Sumatera Barat": (-0.7399, 100.8000),
+            "Riau": (0.2933, 101.7068),
+            "Kepulauan Riau": (0.9000, 104.4500),
+            "Jambi": (-1.6101, 103.6131),
+            "Sumatera Selatan": (-3.3194, 103.9144),
+            "Bengkulu": (-3.7928, 102.2608),
+            "Lampung": (-4.5585, 105.4068),
+            "Kepulauan Bangka Belitung": (-2.7410, 106.4406),
+        }
+        prov_counts['lat'] = prov_counts['provinsi'].map(lambda p: prov_center.get(p, (0,0))[0])
+        prov_counts['lon'] = prov_counts['provinsi'].map(lambda p: prov_center.get(p, (0,0))[1])
+
+        # ------------------------------------------------------------------
+        # 2. Coba tampilkan choropleth dengan GeoJSON
+        # ------------------------------------------------------------------
+        use_choropleth = False
+        geojson_data = None
+        # Daftar URL GeoJSON alternatif
+        geojson_urls = [
+            "https://raw.githubusercontent.com/alfarisi/indonesia-geojson/master/geojson/indonesia-province-simple.geojson",
+            "https://raw.githubusercontent.com/putuwaw/indonesia-geojson/master/geojson/provinces.json",
+            "https://raw.githubusercontent.com/superpikar/indonesia-geojson/master/indonesia-province-simple.geojson"
         ]
-        features = [f for f in geojson_data['features'] if f['properties']['name'] in sumatera_list]
-        geojson_sumatera = {"type": "FeatureCollection", "features": features}
+        for url in geojson_urls:
+            try:
+                resp = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=10)
+                if resp.status_code == 200:
+                    geojson_data = resp.json()
+                    # Cek apakah ada properti 'name'
+                    if 'features' in geojson_data and len(geojson_data['features']) > 0:
+                        if 'properties' in geojson_data['features'][0] and 'name' in geojson_data['features'][0]['properties']:
+                            use_choropleth = True
+                            break
+            except:
+                continue
 
-        # ------------------------------------------------------------------
-        # 3. Choropleth map dengan gradasi warna oranye
-        # ------------------------------------------------------------------
-        fig = px.choropleth_mapbox(
-            prov_counts,
-            geojson=geojson_sumatera,
-            locations='provinsi',
-            featureidkey="properties.name",
-            color='persen',
-            color_continuous_scale='Oranges',
-            range_color=(0, prov_counts['persen'].max()),
-            mapbox_style="carto-positron",
-            zoom=5.5,
-            center={"lat": -1.5, "lon": 102.5},
-            opacity=0.8,
-            labels={'persen': 'Persentase (%)'},
-            hover_data={'provinsi': True, 'jumlah': ':,.0f', 'persen': ':.2f'}
-        )
+        if use_choropleth and geojson_data:
+            # Filter fitur untuk Sumatera
+            sumatera_prov = list(prov_center.keys())
+            features = [f for f in geojson_data['features'] if f['properties'].get('name') in sumatera_prov]
+            if features:
+                geojson_sumatera = {"type": "FeatureCollection", "features": features}
+                fig = px.choropleth_mapbox(
+                    prov_counts,
+                    geojson=geojson_sumatera,
+                    locations='provinsi',
+                    featureidkey="properties.name",
+                    color='persen',
+                    color_continuous_scale='Oranges',
+                    range_color=(0, prov_counts['persen'].max()),
+                    mapbox_style="carto-positron",
+                    zoom=5.3,
+                    center={"lat": -1.5, "lon": 102.5},
+                    opacity=0.8,
+                    labels={'persen': 'Persentase (%)'}
+                )
+                fig.update_layout(margin=dict(l=0, r=0, t=0, b=0), height=600)
+                st.plotly_chart(fig, use_container_width=True)
+            else:
+                use_choropleth = False
 
-        fig.update_layout(
-            margin=dict(l=0, r=0, t=0, b=0),
-            coloraxis_colorbar=dict(title="Persentase (%)", thickness=15),
-            height=600
-        )
-
-        st.plotly_chart(fig, use_container_width=True)
-
-        # Opsional: tabel detail (bisa dihapus jika tidak ingin)
-        with st.expander("📋 Lihat Tabel Persentase per Provinsi"):
-            st.dataframe(
-                prov_counts[['provinsi', 'jumlah', 'persen']]
-                .sort_values('persen', ascending=False),
-                use_container_width=True
+        if not use_choropleth:
+            # Fallback: peta marker dengan gradasi warna
+            fig = px.scatter_geo(
+                prov_counts,
+                lat='lat',
+                lon='lon',
+                color='persen',
+                size=[20] * len(prov_counts),
+                color_continuous_scale='Oranges',
+                hover_name='provinsi',
+                hover_data={'jumlah': ':,.0f', 'persen': ':.2f', 'lat': False, 'lon': False},
+                title="Persentase per Provinsi (Marker)",
+                projection='mercator'
             )
+            fig.update_geos(
+                showcoastlines=True, coastlinecolor='gray',
+                showland=True, landcolor='lightgray',
+                showocean=True, oceancolor='azure',
+                lataxis_range=[-6, 7], lonaxis_range=[95, 110],
+                resolution=50
+            )
+            fig.update_layout(height=600, margin=dict(l=0, r=0, t=0, b=0))
+            st.plotly_chart(fig, use_container_width=True)
+            st.info("GeoJSON tidak tersedia, ditampilkan peta marker dengan gradasi warna.")
+
+        with st.expander("📋 Tabel Persentase per Provinsi"):
+            st.dataframe(prov_counts[['provinsi', 'jumlah', 'persen']].sort_values('persen', ascending=False))
 
 except Exception as e:
     st.error(f"Gagal menampilkan peta: {e}")
