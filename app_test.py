@@ -322,7 +322,7 @@ with col3:
     st.metric("Jumlah Dokumen Diterbitkan", jumlah_dokumen)
 
 # ======================================================
-# PETA SUMATERA DENGAN STYLE OPEN STREET MAP (tanpa legenda)
+# PETA SUMATERA DENGAN STYLE OPEN STREET MAP (tanpa legenda, teks biru, zoom aktif)
 # ======================================================
 st.markdown("## 🗺️ Sebaran Data Layanan per Provinsi di Sumatera")
 
@@ -419,7 +419,7 @@ try:
                 color='persen',
                 color_continuous_scale='Oranges',
                 range_color=(0, prov_counts['persen'].max()),
-                mapbox_style='open-street-map',   # mirip Google Maps
+                mapbox_style='open-street-map',
                 zoom=5.3,
                 center={"lat": -1.5, "lon": 102.5},
                 opacity=0.7,
@@ -428,9 +428,9 @@ try:
             fig.update_layout(
                 margin=dict(l=0, r=0, t=0, b=0),
                 height=600,
-                coloraxis_showscale=False   # hilangkan legenda
+                coloraxis_showscale=False
             )
-            # Tambahkan teks persentase pada setiap provinsi
+            # Tambahkan teks persentase dengan warna biru kontras
             for _, row in prov_counts.iterrows():
                 prov = row['provinsi']
                 persen = row['persen']
@@ -440,11 +440,13 @@ try:
                         x=lon, y=lat,
                         text=f"{prov}<br>{persen:.1f}%",
                         showarrow=False,
-                        font=dict(size=9, color="black"),
-                        bgcolor="rgba(255,255,255,0.7)",
-                        borderpad=2
+                        font=dict(size=10, color="blue", weight="bold"),
+                        bgcolor="rgba(255,255,255,0.85)",
+                        borderpad=3,
+                        bordercolor="blue",
+                        borderwidth=0.5
                     )
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, use_container_width=True, config={'scrollZoom': True, 'displayModeBar': True})
         else:
             # Fallback: scatter mapbox dengan OSM
             fig = px.scatter_mapbox(
@@ -465,16 +467,18 @@ try:
                 height=600,
                 coloraxis_showscale=False
             )
-            # Teks persentase
             for _, row in prov_counts.iterrows():
                 fig.add_annotation(
                     x=row['lon'], y=row['lat'],
                     text=f"{row['provinsi']}<br>{row['persen']:.1f}%",
                     showarrow=False,
-                    font=dict(size=9),
-                    bgcolor="rgba(255,255,255,0.7)"
+                    font=dict(size=10, color="blue", weight="bold"),
+                    bgcolor="rgba(255,255,255,0.85)",
+                    borderpad=3,
+                    bordercolor="blue",
+                    borderwidth=0.5
                 )
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, use_container_width=True, config={'scrollZoom': True, 'displayModeBar': True})
             st.info("GeoJSON tidak tersedia, ditampilkan peta marker dengan style OpenStreetMap.")
 
         # Tabel detail di expander
