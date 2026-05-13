@@ -327,9 +327,6 @@ with col3:
 st.markdown("## 🗺️ Sebaran Data Layanan per Provinsi di Sumatera")
 
 try:
-    import requests
-    import plotly.express as px
-
     # ------------------------------------------------------------------
     # 1. Mapping Wilker ke provinsi standar
     # ------------------------------------------------------------------
@@ -430,7 +427,7 @@ try:
                 height=600,
                 coloraxis_showscale=False
             )
-            # Tambahkan teks persentase dengan warna biru kontras
+            # Tambahkan teks persentase dengan warna biru kontras (tanpa 'weight')
             for _, row in prov_counts.iterrows():
                 prov = row['provinsi']
                 persen = row['persen']
@@ -440,7 +437,7 @@ try:
                         x=lon, y=lat,
                         text=f"{prov}<br>{persen:.1f}%",
                         showarrow=False,
-                        font=dict(size=10, color="blue", weight="bold"),
+                        font=dict(size=10, color="blue"),
                         bgcolor="rgba(255,255,255,0.85)",
                         borderpad=3,
                         bordercolor="blue",
@@ -472,7 +469,7 @@ try:
                     x=row['lon'], y=row['lat'],
                     text=f"{row['provinsi']}<br>{row['persen']:.1f}%",
                     showarrow=False,
-                    font=dict(size=10, color="blue", weight="bold"),
+                    font=dict(size=10, color="blue"),
                     bgcolor="rgba(255,255,255,0.85)",
                     borderpad=3,
                     bordercolor="blue",
