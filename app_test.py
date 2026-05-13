@@ -328,27 +328,44 @@ st.markdown("## 🗺️ Sebaran Wilker di Sumatera (Berdasarkan Persentase)")
 try:
     # ------------------------------------------------------------------
     # 1. Mapping kata kunci -> (longitude, latitude)
-    #    (mencakup semua kemungkinan nama Wilker di data)
+    #    (Menambahkan Riau, Tanjungpinang, Natuna)
     # ------------------------------------------------------------------
     coord_mapping_keywords = {
+        # Provinsi Aceh
         "aceh": (95.30015458, 5.531893527),
+        # Sumatera Utara
         "sumatera utara": (98.626216, 3.561307),
         "sumut": (98.626216, 3.561307),
+        # Sumatera Barat
         "sumatera barat": (100.3977405, -1.02758164),
         "sumbar": (100.3977405, -1.02758164),
+        # Riau (Pekanbaru)
+        "riau": (101.4456, 0.5071),
+        # Kepulauan Riau (Tanjungpinang)
         "kepulauan riau": (104.478212, 0.9038490179),
         "kepri": (104.478212, 0.9038490179),
+        "tanjungpinang": (104.478212, 0.9038490179),
+        # Batam
         "batam": (104.0286529, 1.1073442),
+        # Anambas
         "anambas": (106.21411, 3.2182),
         "kawasan konservasi": (106.21411, 3.2182),
-        "lettung": (105.704783, 2.989736),
+        # Letung
         "letung": (105.704783, 2.989736),
+        "lettung": (105.704783, 2.989736),
+        # Natuna (perkiraan koordinat Ranai)
+        "natuna": (108.2105, 3.9831),
+        # Jambi
         "jambi": (103.5787186, -1.649687437),
+        # Sumatera Selatan
         "sumatera selatan": (104.7358, -2.9640),
         "sumsel": (104.7358, -2.9640),
+        # Bengkulu
         "bengkulu": (102.286973, -3.8275089),
+        # Bangka Belitung
         "bangka belitung": (106.145187, -2.14185),
         "babel": (106.145187, -2.14185),
+        # Lampung
         "lampung": (105.282658, -5.383617),
     }
     
@@ -383,7 +400,7 @@ try:
         wilker_counts['longitude'] = coords.apply(lambda x: x[0])
         wilker_counts['latitude']  = coords.apply(lambda x: x[1])
         
-        # Cek Wilker yang tidak cocok
+        # Cek Wilker yang tidak cocok (sekarang seharusnya Riau, Tanjungpinang, Natuna sudah teratasi)
         unknown = wilker_counts[wilker_counts['longitude'].isna()]
         if not unknown.empty:
             st.info(f"⚠️ Wilker berikut tidak memiliki koordinat yang cocok: {', '.join(unknown['Wilker'].tolist())}. Peta hanya menampilkan Wilker yang dikenal.")
@@ -401,7 +418,7 @@ try:
                 wilker_counts_known,
                 lat='latitude',
                 lon='longitude',
-                size=[15] * len(wilker_counts_known),   # ukuran marker seragam
+                size=[15] * len(wilker_counts_known),
                 color='persentase',
                 hover_name='Wilker',
                 hover_data={
@@ -419,8 +436,8 @@ try:
             # Perbaiki layout agar fokus ke wilayah Sumatera
             fig_map.update_geos(
                 projection_type='equirectangular',
-                center=dict(lat=-0.5, lon=102.0),      # tengah Sumatera
-                projection_scale=4.5,                 # zoom
+                center=dict(lat=-0.5, lon=102.0),
+                projection_scale=4.5,
                 lataxis_range=[-6, 6],
                 lonaxis_range=[95, 108],
                 showcoastlines=True,
@@ -446,7 +463,7 @@ try:
                 margin=dict(l=10, r=10, t=50, b=10)
             )
             
-            # Tambahkan teks persentase di samping marker (opsional)
+            # Tambahkan teks persentase di samping marker
             fig_map.add_trace(
                 go.Scattergeo(
                     lon=wilker_counts_known['longitude'],
