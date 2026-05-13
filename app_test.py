@@ -6,6 +6,7 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+import requests
 from datetime import datetime
 
 # ======================================================
@@ -321,174 +322,112 @@ with col3:
     st.metric("Jumlah Dokumen Diterbitkan", jumlah_dokumen)
 
 # ======================================================
-# PETA SUMATERA DENGAN SEBARAN WILKER (BERDASARKAN PERSENTASE)
+# PETA SUMATERA CHOROPLETH (Berdasarkan Provinsi)
 # ======================================================
-st.markdown("## 🗺️ Sebaran Wilker di Sumatera (Berdasarkan Persentase)")
+st.markdown("## 🗺️ Sebaran Data Layanan per Provinsi di Sumatera")
 
 try:
+    import requests
+    import plotly.express as px
+
     # ------------------------------------------------------------------
-    # 1. Mapping kata kunci -> (longitude, latitude)
-    #    (Menambahkan Riau, Tanjungpinang, Natuna)
+    # 1. Mapping Wilker ke nama provinsi standar (cocok dengan geojson)
     # ------------------------------------------------------------------
-    coord_mapping_keywords = {
-        # Provinsi Aceh
-        "aceh": (95.30015458, 5.531893527),
-        # Sumatera Utara
-        "sumatera utara": (98.626216, 3.561307),
-        "sumut": (98.626216, 3.561307),
-        # Sumatera Barat
-        "sumatera barat": (100.3977405, -1.02758164),
-        "sumbar": (100.3977405, -1.02758164),
-        # Riau (Pekanbaru)
-        "riau": (101.4456, 0.5071),
-        # Kepulauan Riau (Tanjungpinang)
-        "kepulauan riau": (104.478212, 0.9038490179),
-        "kepri": (104.478212, 0.9038490179),
-        "tanjungpinang": (104.478212, 0.9038490179),
-        # Batam
-        "batam": (104.0286529, 1.1073442),
-        # Anambas
-        "anambas": (106.21411, 3.2182),
-        "kawasan konservasi": (106.21411, 3.2182),
-        # Letung
-        "letung": (105.704783, 2.989736),
-        "lettung": (105.704783, 2.989736),
-        # Natuna (perkiraan koordinat Ranai)
-        "natuna": (108.2105, 3.9831),
-        # Jambi
-        "jambi": (103.5787186, -1.649687437),
-        # Sumatera Selatan
-        "sumatera selatan": (104.7358, -2.9640),
-        "sumsel": (104.7358, -2.9640),
-        # Bengkulu
-        "bengkulu": (102.286973, -3.8275089),
-        # Bangka Belitung
-        "bangka belitung": (106.145187, -2.14185),
-        "babel": (106.145187, -2.14185),
-        # Lampung
-        "lampung": (105.282658, -5.383617),
+    wilker_to_provinsi = {
+        "aceh": "Aceh",
+        "sumatera utara": "Sumatera Utara",
+        "sumut": "Sumatera Utara",
+        "sumatera barat": "Sumatera Barat",
+        "sumbar": "Sumatera Barat",
+        "riau": "Riau",
+        "kepulauan riau": "Kepulauan Riau",
+        "kepri": "Kepulauan Riau",
+        "tanjungpinang": "Kepulauan Riau",
+        "batam": "Kepulauan Riau",
+        "anambas": "Kepulauan Riau",
+        "natuna": "Kepulauan Riau",
+        "letung": "Kepulauan Riau",
+        "jambi": "Jambi",
+        "sumatera selatan": "Sumatera Selatan",
+        "sumsel": "Sumatera Selatan",
+        "bengkulu": "Bengkulu",
+        "bangka belitung": "Kepulauan Bangka Belitung",
+        "babel": "Kepulauan Bangka Belitung",
+        "lampung": "Lampung",
     }
-    
-    # ------------------------------------------------------------------
-    # 2. Fungsi untuk mencocokkan nama Wilker dari data ke koordinat
-    # ------------------------------------------------------------------
-    def get_coordinates(wilker_name):
+
+    def map_wilker(wilker_name):
         if pd.isna(wilker_name):
-            return None, None
-        wilker_lower = wilker_name.lower().strip()
-        for keyword, (lon, lat) in coord_mapping_keywords.items():
-            if keyword in wilker_lower:
-                return lon, lat
-        return None, None
-    
-    # ------------------------------------------------------------------
-    # 3. Agregasi data per Wilker
-    # ------------------------------------------------------------------
-    if 'Wilker' not in df_filtered.columns:
-        st.warning("Kolom 'Wilker' tidak ditemukan dalam data.")
-    elif df_filtered.empty:
-        st.info("Tidak ada data setelah filter. Peta tidak dapat ditampilkan.")
+            return None
+        nama = str(wilker_name).lower().strip()
+        for key, prov in wilker_to_provinsi.items():
+            if key in nama:
+                return prov
+        return None
+
+    # Tambah kolom provinsi
+    df_filtered['provinsi'] = df_filtered['Wilker'].apply(map_wilker)
+
+    # Agregasi jumlah dokumen per provinsi
+    prov_counts = df_filtered[df_filtered['provinsi'].notna()].groupby('provinsi').size().reset_index(name='jumlah')
+    total = prov_counts['jumlah'].sum()
+    prov_counts['persen'] = (prov_counts['jumlah'] / total) * 100
+
+    if prov_counts.empty:
+        st.warning("Tidak ada data provinsi yang cocok. Periksa kembali nama Wilker.")
     else:
-        # Hitung jumlah baris per Wilker
-        wilker_counts = df_filtered['Wilker'].value_counts().reset_index()
-        wilker_counts.columns = ['Wilker', 'jumlah_dokumen']
-        total_dokumen = wilker_counts['jumlah_dokumen'].sum()
-        wilker_counts['persentase'] = (wilker_counts['jumlah_dokumen'] / total_dokumen) * 100
-        
-        # Tambahkan koordinat dengan fungsi pencocokan
-        coords = wilker_counts['Wilker'].apply(get_coordinates)
-        wilker_counts['longitude'] = coords.apply(lambda x: x[0])
-        wilker_counts['latitude']  = coords.apply(lambda x: x[1])
-        
-        # Cek Wilker yang tidak cocok (sekarang seharusnya Riau, Tanjungpinang, Natuna sudah teratasi)
-        unknown = wilker_counts[wilker_counts['longitude'].isna()]
-        if not unknown.empty:
-            st.info(f"⚠️ Wilker berikut tidak memiliki koordinat yang cocok: {', '.join(unknown['Wilker'].tolist())}. Peta hanya menampilkan Wilker yang dikenal.")
-        
-        # Hapus Wilker tanpa koordinat
-        wilker_counts_known = wilker_counts.dropna(subset=['longitude', 'latitude'])
-        
-        if wilker_counts_known.empty:
-            st.warning("Tidak ada Wilker yang memiliki koordinat yang cocok setelah pencocokan.")
-        else:
-            # ------------------------------------------------------------------
-            # 4. Buat peta dengan Plotly (scatter_geo)
-            # ------------------------------------------------------------------
-            fig_map = px.scatter_geo(
-                wilker_counts_known,
-                lat='latitude',
-                lon='longitude',
-                size=[15] * len(wilker_counts_known),
-                color='persentase',
-                hover_name='Wilker',
-                hover_data={
-                    'jumlah_dokumen': ':,.0f',
-                    'persentase': ':.2f',
-                    'latitude': False,
-                    'longitude': False
-                },
-                color_continuous_scale='Oranges',
-                title='Persentase Jumlah Dokumen per Wilker (Warna oranye = persentase)',
-                labels={'persentase': 'Persentase (%)'},
-                projection='natural earth'
+        # ------------------------------------------------------------------
+        # 2. Ambil GeoJSON provinsi Indonesia (sumber publik)
+        # ------------------------------------------------------------------
+        geojson_url = "https://raw.githubusercontent.com/putuwaw/indonesia-geojson/master/geojson/provinces.json"
+        response = requests.get(geojson_url)
+        geojson_data = response.json()
+
+        # Filter hanya provinsi Sumatera
+        sumatera_list = [
+            "Aceh", "Sumatera Utara", "Sumatera Barat", "Riau", "Kepulauan Riau",
+            "Jambi", "Sumatera Selatan", "Bengkulu", "Lampung", "Kepulauan Bangka Belitung"
+        ]
+        features = [f for f in geojson_data['features'] if f['properties']['name'] in sumatera_list]
+        geojson_sumatera = {"type": "FeatureCollection", "features": features}
+
+        # ------------------------------------------------------------------
+        # 3. Choropleth map dengan gradasi warna oranye
+        # ------------------------------------------------------------------
+        fig = px.choropleth_mapbox(
+            prov_counts,
+            geojson=geojson_sumatera,
+            locations='provinsi',
+            featureidkey="properties.name",
+            color='persen',
+            color_continuous_scale='Oranges',
+            range_color=(0, prov_counts['persen'].max()),
+            mapbox_style="carto-positron",
+            zoom=5.5,
+            center={"lat": -1.5, "lon": 102.5},
+            opacity=0.8,
+            labels={'persen': 'Persentase (%)'},
+            hover_data={'provinsi': True, 'jumlah': ':,.0f', 'persen': ':.2f'}
+        )
+
+        fig.update_layout(
+            margin=dict(l=0, r=0, t=0, b=0),
+            coloraxis_colorbar=dict(title="Persentase (%)", thickness=15),
+            height=600
+        )
+
+        st.plotly_chart(fig, use_container_width=True)
+
+        # Opsional: tabel detail (bisa dihapus jika tidak ingin)
+        with st.expander("📋 Lihat Tabel Persentase per Provinsi"):
+            st.dataframe(
+                prov_counts[['provinsi', 'jumlah', 'persen']]
+                .sort_values('persen', ascending=False),
+                use_container_width=True
             )
-            
-            # Perbaiki layout agar fokus ke wilayah Sumatera
-            fig_map.update_geos(
-                projection_type='equirectangular',
-                center=dict(lat=-0.5, lon=102.0),
-                projection_scale=4.5,
-                lataxis_range=[-6, 6],
-                lonaxis_range=[95, 108],
-                showcoastlines=True,
-                coastlinecolor='rgba(0,0,0,0.3)',
-                showland=True,
-                landcolor='rgb(240,240,240)',
-                showocean=True,
-                oceancolor='rgb(220,230,240)',
-                showcountries=True,
-                countrycolor='rgba(0,0,0,0.2)'
-            )
-            
-            fig_map.update_layout(
-                height=600,
-                title_font_size=20,
-                title_x=0.5,
-                font=dict(family="Segoe UI", size=12),
-                coloraxis_colorbar=dict(
-                    title="Persentase (%)",
-                    tickformat=".1f",
-                    thickness=15
-                ),
-                margin=dict(l=10, r=10, t=50, b=10)
-            )
-            
-            # Tambahkan teks persentase di samping marker
-            fig_map.add_trace(
-                go.Scattergeo(
-                    lon=wilker_counts_known['longitude'],
-                    lat=wilker_counts_known['latitude'],
-                    text=wilker_counts_known['persentase'].round(1).astype(str) + '%',
-                    mode='text',
-                    textfont=dict(size=10, color='black'),
-                    textposition='top center',
-                    showlegend=False,
-                    hoverinfo='none'
-                )
-            )
-            
-            st.plotly_chart(fig_map, use_container_width=True)
-            
-            # Tampilkan tabel ringkasan persentase
-            with st.expander("📋 Lihat Tabel Persentase per Wilker"):
-                st.dataframe(
-                    wilker_counts_known[['Wilker', 'jumlah_dokumen', 'persentase']]
-                    .sort_values('persentase', ascending=False),
-                    use_container_width=True
-                )
-                
+
 except Exception as e:
-    st.error(f"Terjadi error saat membuat peta sebaran Wilker: {e}")
+    st.error(f"Gagal menampilkan peta: {e}")
 
 # ======================================================
 # VISUALISASI PERBANDINGAN DENGAN KOLOM NUMERIK PILIHAN
