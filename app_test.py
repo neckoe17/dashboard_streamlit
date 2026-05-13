@@ -327,25 +327,45 @@ st.markdown("## 🗺️ Sebaran Wilker di Sumatera (Berdasarkan Persentase)")
 
 try:
     # ------------------------------------------------------------------
-    # 1. Koordinat Wilker berdasarkan data yang diberikan
+    # 1. Mapping kata kunci -> (longitude, latitude)
+    #    (mencakup semua kemungkinan nama Wilker di data)
     # ------------------------------------------------------------------
-    coord_mapping = {
-        "Wilayah Kerja Provinsi Aceh": (95.30015458, 5.531893527),
-        "Wilayah Kerja Provinsi Sumatera Utara": (98.626216, 3.561307),
-        "Wilayah Kerja Provinsi Sumatera Barat": (100.3977405, -1.02758164),
-        "Wilayah Kerja Provinsi Kepulauan Riau": (104.478212, 0.9038490179),
-        "Gerai Pelayanan Batam": (104.0286529, 1.1073442),
-        "Wilayah Kerja Kawasan Konservasi Perairan Nasional Kepulauan Anambas dan Laut di Sekitarnya": (106.21411, 3.2182),
-        "Gerai Pelayanan Letung": (105.704783, 2.989736),
-        "Wilayah Kerja Provinsi Jambi": (103.5787186, -1.649687437),
-        "Wilayah Kerja Provinsi Sumatera Selatan": (104.7358, -2.9640),
-        "Wilayah Kerja Provinsi Bengkulu": (102.286973, -3.8275089),
-        "Wilayah Kerja Provinsi Kepulauan Bangka Belitung": (106.145187, -2.14185),
-        "Wilayah Kerja Provinsi Lampung": (105.282658, -5.383617),
+    coord_mapping_keywords = {
+        "aceh": (95.30015458, 5.531893527),
+        "sumatera utara": (98.626216, 3.561307),
+        "sumut": (98.626216, 3.561307),
+        "sumatera barat": (100.3977405, -1.02758164),
+        "sumbar": (100.3977405, -1.02758164),
+        "kepulauan riau": (104.478212, 0.9038490179),
+        "kepri": (104.478212, 0.9038490179),
+        "batam": (104.0286529, 1.1073442),
+        "anambas": (106.21411, 3.2182),
+        "kawasan konservasi": (106.21411, 3.2182),
+        "lettung": (105.704783, 2.989736),
+        "letung": (105.704783, 2.989736),
+        "jambi": (103.5787186, -1.649687437),
+        "sumatera selatan": (104.7358, -2.9640),
+        "sumsel": (104.7358, -2.9640),
+        "bengkulu": (102.286973, -3.8275089),
+        "bangka belitung": (106.145187, -2.14185),
+        "babel": (106.145187, -2.14185),
+        "lampung": (105.282658, -5.383617),
     }
     
     # ------------------------------------------------------------------
-    # 2. Agregasi data per Wilker (hitung jumlah dokumen & persentase)
+    # 2. Fungsi untuk mencocokkan nama Wilker dari data ke koordinat
+    # ------------------------------------------------------------------
+    def get_coordinates(wilker_name):
+        if pd.isna(wilker_name):
+            return None, None
+        wilker_lower = wilker_name.lower().strip()
+        for keyword, (lon, lat) in coord_mapping_keywords.items():
+            if keyword in wilker_lower:
+                return lon, lat
+        return None, None
+    
+    # ------------------------------------------------------------------
+    # 3. Agregasi data per Wilker
     # ------------------------------------------------------------------
     if 'Wilker' not in df_filtered.columns:
         st.warning("Kolom 'Wilker' tidak ditemukan dalam data.")
@@ -358,24 +378,30 @@ try:
         total_dokumen = wilker_counts['jumlah_dokumen'].sum()
         wilker_counts['persentase'] = (wilker_counts['jumlah_dokumen'] / total_dokumen) * 100
         
-        # Tambahkan koordinat (longitude, latitude)
-        wilker_counts['longitude'] = wilker_counts['Wilker'].map(lambda x: coord_mapping.get(x, (None, None))[0])
-        wilker_counts['latitude']  = wilker_counts['Wilker'].map(lambda x: coord_mapping.get(x, (None, None))[1])
+        # Tambahkan koordinat dengan fungsi pencocokan
+        coords = wilker_counts['Wilker'].apply(get_coordinates)
+        wilker_counts['longitude'] = coords.apply(lambda x: x[0])
+        wilker_counts['latitude']  = coords.apply(lambda x: x[1])
         
-        # Hapus Wilker yang tidak memiliki koordinat
-        wilker_counts = wilker_counts.dropna(subset=['longitude', 'latitude'])
+        # Cek Wilker yang tidak cocok
+        unknown = wilker_counts[wilker_counts['longitude'].isna()]
+        if not unknown.empty:
+            st.info(f"⚠️ Wilker berikut tidak memiliki koordinat yang cocok: {', '.join(unknown['Wilker'].tolist())}. Peta hanya menampilkan Wilker yang dikenal.")
         
-        if wilker_counts.empty:
-            st.warning("Tidak ada Wilker yang memiliki koordinat yang cocok.")
+        # Hapus Wilker tanpa koordinat
+        wilker_counts_known = wilker_counts.dropna(subset=['longitude', 'latitude'])
+        
+        if wilker_counts_known.empty:
+            st.warning("Tidak ada Wilker yang memiliki koordinat yang cocok setelah pencocokan.")
         else:
             # ------------------------------------------------------------------
-            # 3. Buat peta dengan Plotly (scatter_geo)
+            # 4. Buat peta dengan Plotly (scatter_geo)
             # ------------------------------------------------------------------
             fig_map = px.scatter_geo(
-                wilker_counts,
+                wilker_counts_known,
                 lat='latitude',
                 lon='longitude',
-                size=[15] * len(wilker_counts),      # ukuran marker tetap
+                size=[15] * len(wilker_counts_known),   # ukuran marker seragam
                 color='persentase',
                 hover_name='Wilker',
                 hover_data={
@@ -385,7 +411,7 @@ try:
                     'longitude': False
                 },
                 color_continuous_scale='Oranges',
-                title='Persentase Jumlah Dokumen per Wilker (Ukuran marker = persentase warna)',
+                title='Persentase Jumlah Dokumen per Wilker (Warna oranye = persentase)',
                 labels={'persentase': 'Persentase (%)'},
                 projection='natural earth'
             )
@@ -393,8 +419,8 @@ try:
             # Perbaiki layout agar fokus ke wilayah Sumatera
             fig_map.update_geos(
                 projection_type='equirectangular',
-                center=dict(lat=-0.5, lon=102.0),    # tengah Sumatera
-                projection_scale=4.5,                # zoom
+                center=dict(lat=-0.5, lon=102.0),      # tengah Sumatera
+                projection_scale=4.5,                 # zoom
                 lataxis_range=[-6, 6],
                 lonaxis_range=[95, 108],
                 showcoastlines=True,
@@ -423,9 +449,9 @@ try:
             # Tambahkan teks persentase di samping marker (opsional)
             fig_map.add_trace(
                 go.Scattergeo(
-                    lon=wilker_counts['longitude'],
-                    lat=wilker_counts['latitude'],
-                    text=wilker_counts['persentase'].round(1).astype(str) + '%',
+                    lon=wilker_counts_known['longitude'],
+                    lat=wilker_counts_known['latitude'],
+                    text=wilker_counts_known['persentase'].round(1).astype(str) + '%',
                     mode='text',
                     textfont=dict(size=10, color='black'),
                     textposition='top center',
@@ -439,7 +465,7 @@ try:
             # Tampilkan tabel ringkasan persentase
             with st.expander("📋 Lihat Tabel Persentase per Wilker"):
                 st.dataframe(
-                    wilker_counts[['Wilker', 'jumlah_dokumen', 'persentase']]
+                    wilker_counts_known[['Wilker', 'jumlah_dokumen', 'persentase']]
                     .sort_values('persentase', ascending=False),
                     use_container_width=True
                 )
