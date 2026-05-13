@@ -5,6 +5,7 @@ import base64
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
 from datetime import datetime
 
 # ======================================================
@@ -320,21 +321,131 @@ with col3:
     st.metric("Jumlah Dokumen Diterbitkan", jumlah_dokumen)
 
 # ======================================================
-# PIE CHART WILKER
+# PETA SUMATERA DENGAN SEBARAN WILKER (BERDASARKAN PERSENTASE)
 # ======================================================
-st.markdown("## 🥧 Persentase Wilker (Terfilter)")
+st.markdown("## 🗺️ Sebaran Wilker di Sumatera (Berdasarkan Persentase)")
+
 try:
-    wilker_count = df_filtered['Wilker'].astype(str).value_counts().reset_index()
-    wilker_count.columns = ['Wilker', 'Jumlah']
-    fig_pie = px.pie(wilker_count, names='Wilker', values='Jumlah', hole=0.45,
-                     title='Persentase Wilker', template='plotly_white')
-    fig_pie.update_traces(textinfo='percent+label', pull=[0.03]*len(wilker_count))
-    fig_pie.update_layout(height=520, title_x=0.5, title_font_size=20,
-                          font=dict(family="Segoe UI", size=14, color="#000000"),
-                          plot_bgcolor='rgba(255,255,255,0)', paper_bgcolor='rgba(255,255,255,0)')
-    st.plotly_chart(fig_pie, use_container_width=True)
+    # ------------------------------------------------------------------
+    # 1. Koordinat Wilker berdasarkan data yang diberikan
+    # ------------------------------------------------------------------
+    coord_mapping = {
+        "Wilayah Kerja Provinsi Aceh": (95.30015458, 5.531893527),
+        "Wilayah Kerja Provinsi Sumatera Utara": (98.626216, 3.561307),
+        "Wilayah Kerja Provinsi Sumatera Barat": (100.3977405, -1.02758164),
+        "Wilayah Kerja Provinsi Kepulauan Riau": (104.478212, 0.9038490179),
+        "Gerai Pelayanan Batam": (104.0286529, 1.1073442),
+        "Wilayah Kerja Kawasan Konservasi Perairan Nasional Kepulauan Anambas dan Laut di Sekitarnya": (106.21411, 3.2182),
+        "Gerai Pelayanan Letung": (105.704783, 2.989736),
+        "Wilayah Kerja Provinsi Jambi": (103.5787186, -1.649687437),
+        "Wilayah Kerja Provinsi Sumatera Selatan": (104.7358, -2.9640),
+        "Wilayah Kerja Provinsi Bengkulu": (102.286973, -3.8275089),
+        "Wilayah Kerja Provinsi Kepulauan Bangka Belitung": (106.145187, -2.14185),
+        "Wilayah Kerja Provinsi Lampung": (105.282658, -5.383617),
+    }
+    
+    # ------------------------------------------------------------------
+    # 2. Agregasi data per Wilker (hitung jumlah dokumen & persentase)
+    # ------------------------------------------------------------------
+    if 'Wilker' not in df_filtered.columns:
+        st.warning("Kolom 'Wilker' tidak ditemukan dalam data.")
+    elif df_filtered.empty:
+        st.info("Tidak ada data setelah filter. Peta tidak dapat ditampilkan.")
+    else:
+        # Hitung jumlah baris per Wilker
+        wilker_counts = df_filtered['Wilker'].value_counts().reset_index()
+        wilker_counts.columns = ['Wilker', 'jumlah_dokumen']
+        total_dokumen = wilker_counts['jumlah_dokumen'].sum()
+        wilker_counts['persentase'] = (wilker_counts['jumlah_dokumen'] / total_dokumen) * 100
+        
+        # Tambahkan koordinat (longitude, latitude)
+        wilker_counts['longitude'] = wilker_counts['Wilker'].map(lambda x: coord_mapping.get(x, (None, None))[0])
+        wilker_counts['latitude']  = wilker_counts['Wilker'].map(lambda x: coord_mapping.get(x, (None, None))[1])
+        
+        # Hapus Wilker yang tidak memiliki koordinat
+        wilker_counts = wilker_counts.dropna(subset=['longitude', 'latitude'])
+        
+        if wilker_counts.empty:
+            st.warning("Tidak ada Wilker yang memiliki koordinat yang cocok.")
+        else:
+            # ------------------------------------------------------------------
+            # 3. Buat peta dengan Plotly (scatter_geo)
+            # ------------------------------------------------------------------
+            fig_map = px.scatter_geo(
+                wilker_counts,
+                lat='latitude',
+                lon='longitude',
+                size=[15] * len(wilker_counts),      # ukuran marker tetap
+                color='persentase',
+                hover_name='Wilker',
+                hover_data={
+                    'jumlah_dokumen': ':,.0f',
+                    'persentase': ':.2f',
+                    'latitude': False,
+                    'longitude': False
+                },
+                color_continuous_scale='Oranges',
+                title='Persentase Jumlah Dokumen per Wilker (Ukuran marker = persentase warna)',
+                labels={'persentase': 'Persentase (%)'},
+                projection='natural earth'
+            )
+            
+            # Perbaiki layout agar fokus ke wilayah Sumatera
+            fig_map.update_geos(
+                projection_type='equirectangular',
+                center=dict(lat=-0.5, lon=102.0),    # tengah Sumatera
+                projection_scale=4.5,                # zoom
+                lataxis_range=[-6, 6],
+                lonaxis_range=[95, 108],
+                showcoastlines=True,
+                coastlinecolor='rgba(0,0,0,0.3)',
+                showland=True,
+                landcolor='rgb(240,240,240)',
+                showocean=True,
+                oceancolor='rgb(220,230,240)',
+                showcountries=True,
+                countrycolor='rgba(0,0,0,0.2)'
+            )
+            
+            fig_map.update_layout(
+                height=600,
+                title_font_size=20,
+                title_x=0.5,
+                font=dict(family="Segoe UI", size=12),
+                coloraxis_colorbar=dict(
+                    title="Persentase (%)",
+                    tickformat=".1f",
+                    thickness=15
+                ),
+                margin=dict(l=10, r=10, t=50, b=10)
+            )
+            
+            # Tambahkan teks persentase di samping marker (opsional)
+            fig_map.add_trace(
+                go.Scattergeo(
+                    lon=wilker_counts['longitude'],
+                    lat=wilker_counts['latitude'],
+                    text=wilker_counts['persentase'].round(1).astype(str) + '%',
+                    mode='text',
+                    textfont=dict(size=10, color='black'),
+                    textposition='top center',
+                    showlegend=False,
+                    hoverinfo='none'
+                )
+            )
+            
+            st.plotly_chart(fig_map, use_container_width=True)
+            
+            # Tampilkan tabel ringkasan persentase
+            with st.expander("📋 Lihat Tabel Persentase per Wilker"):
+                st.dataframe(
+                    wilker_counts[['Wilker', 'jumlah_dokumen', 'persentase']]
+                    .sort_values('persentase', ascending=False),
+                    use_container_width=True
+                )
+                
 except Exception as e:
-    st.error(f"Terjadi error pada pie chart Wilker: {e}")
+    st.error(f"Terjadi error saat membuat peta sebaran Wilker: {e}")
 
 # ======================================================
 # VISUALISASI PERBANDINGAN DENGAN KOLOM NUMERIK PILIHAN
