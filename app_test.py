@@ -10,6 +10,27 @@ import requests
 from datetime import datetime
 
 # ======================================================
+# FUNGSI FORMAT RUPIAH UNTUK DISPLAY
+# ======================================================
+def format_rupiah(angka):
+    """Format angka ke Rupiah dengan pemisah ribuan titik (Indonesia)"""
+    if pd.isna(angka):
+        return ""
+    try:
+        # Bulatkan ke integer karena PNBP tidak pakai koma
+        angka_int = int(round(angka))
+        # Format dengan titik sebagai pemisah ribuan
+        return f"Rp {angka_int:,}".replace(",", ".")
+    except:
+        return str(angka)
+
+def format_rupiah_plotly(value):
+    """Untuk digunakan di texttemplate Plotly (format dengan koma sebagai ribuan)"""
+    if value is None:
+        return ""
+    return f"Rp {value:,.0f}".replace(",", ".")
+
+# ======================================================
 # FUNCTION BACKGROUND + ELEGANT UI
 # ======================================================
 def add_bg_from_local(image_file):
@@ -163,7 +184,7 @@ add_bg_from_local("MRAP12.jpg")
 # ======================================================
 # JUDUL DASHBOARD
 # ======================================================
-st.title("📊 Dashboard Layanan Jenis LPK Pekanbaru")
+st.title("Dashboard Layanan Jenis LPK Pekanbaru")
 st.markdown("""
 Dashboard ini mengambil data langsung dari Google Spreadsheet
 dan menampilkan visualisasi interaktif menggunakan Streamlit.
@@ -182,7 +203,6 @@ url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid=
 @st.cache_data
 def load_data():
     df = pd.read_csv(url)
-    # Pastikan kolom Jumlah PNBP numerik
     if 'Jumlah PNBP' in df.columns:
         df['Jumlah PNBP'] = pd.to_numeric(df['Jumlah PNBP'], errors='coerce')
     return df
@@ -190,34 +210,29 @@ def load_data():
 df = load_data()
 
 # ======================================================
-# PERSIAPAN FILTER BULAN (deteksi kolom bulan atau tanggal)
+# PERSIAPAN FILTER BULAN
 # ======================================================
 bulan_col = None
-df['bulan_filter_display'] = None  # untuk keperluan filter
+df['bulan_filter_display'] = None
 
-# Cek apakah ada kolom bernama 'Bulan' (case insensitive)
 for col in df.columns:
     if col.lower() == 'bulan':
         bulan_col = col
-        # Gunakan nilai asli dari kolom tersebut sebagai display
         df['bulan_filter_display'] = df[col].astype(str)
         break
 
-# Jika tidak ada, cari kolom tanggal
 if bulan_col is None:
     for col in df.columns:
         if 'tanggal' in col.lower() or 'date' in col.lower() or 'tgl' in col.lower() or 'periode' in col.lower():
             try:
                 df[col] = pd.to_datetime(df[col], errors='coerce')
                 if df[col].notna().any():
-                    # Buat kolom display dengan format "Jan 2024" (atau sesuai)
-                    df['bulan_filter_display'] = df[col].dt.strftime('%b %Y')  # contoh: "Jan 2024"
+                    df['bulan_filter_display'] = df[col].dt.strftime('%b %Y')
                     bulan_col = col
                     break
             except:
                 continue
 
-# Jika masih tidak ada, beri pesan bahwa filter bulan tidak tersedia
 filter_bulan_tersedia = bulan_col is not None
 
 # ======================================================
@@ -225,45 +240,23 @@ filter_bulan_tersedia = bulan_col is not None
 # ======================================================
 st.sidebar.header("🔍 Filter Data")
 
-# 1. Filter Jenis Layanan (dropdown single select)
 jenis_layanan_options = ["Semua"] + sorted(df['Jenis Layanan'].dropna().unique().tolist())
-selected_layanan = st.sidebar.selectbox(
-    "📋 Jenis Layanan",
-    options=jenis_layanan_options,
-    index=0
-)
+selected_layanan = st.sidebar.selectbox("📋 Jenis Layanan", options=jenis_layanan_options, index=0)
 
-# 2. Filter Jenis Ikan (dropdown single select)
 jenis_ikan_options = ["Semua"] + sorted(df['Jenis Ikan'].dropna().unique().tolist())
-selected_ikan = st.sidebar.selectbox(
-    "🐟 Jenis Ikan",
-    options=jenis_ikan_options,
-    index=0
-)
+selected_ikan = st.sidebar.selectbox("🐟 Jenis Ikan", options=jenis_ikan_options, index=0)
 
-# 3. Filter Wilker (dropdown single select)
 wilker_options = ["Semua"] + sorted(df['Wilker'].dropna().astype(str).unique().tolist())
-selected_wilker = st.sidebar.selectbox(
-    "📍 Wilker",
-    options=wilker_options,
-    index=0
-)
+selected_wilker = st.sidebar.selectbox("📍 Wilker", options=wilker_options, index=0)
 
-# 4. Filter Bulan (dropdown single select) - menggunakan kolom bulan_filter_display
 if filter_bulan_tersedia:
-    # Ambil nilai unik yang tidak null dari bulan_filter_display
     bulan_values = sorted(df['bulan_filter_display'].dropna().unique().tolist())
     bulan_options = ["Semua"] + bulan_values
-    selected_bulan = st.sidebar.selectbox(
-        "📅 Bulan",
-        options=bulan_options,
-        index=0
-    )
+    selected_bulan = st.sidebar.selectbox("📅 Bulan", options=bulan_options, index=0)
 else:
     selected_bulan = "Semua"
     st.sidebar.info("Tidak ditemukan kolom bulan atau tanggal. Filter bulan tidak tersedia.")
 
-# 5. Pilihan Kolom Numerik untuk Visualisasi (dropdown)
 numeric_columns = df.select_dtypes(include=['int64', 'float64']).columns.tolist()
 if 'Jumlah PNBP' in numeric_columns:
     default_numeric = 'Jumlah PNBP'
@@ -278,271 +271,195 @@ selected_numeric = st.sidebar.selectbox(
 )
 
 # ======================================================
-# APLIKASI FILTER KE DATAFRAME
+# APLIKASI FILTER
 # ======================================================
 df_filtered = df.copy()
-
-# Filter Jenis Layanan (jika bukan "Semua")
 if selected_layanan != "Semua":
     df_filtered = df_filtered[df_filtered['Jenis Layanan'] == selected_layanan]
-
-# Filter Jenis Ikan (jika bukan "Semua")
 if selected_ikan != "Semua":
     df_filtered = df_filtered[df_filtered['Jenis Ikan'] == selected_ikan]
-
-# Filter Wilker (jika bukan "Semua")
 if selected_wilker != "Semua":
     df_filtered = df_filtered[df_filtered['Wilker'].astype(str) == selected_wilker]
-
-# Filter Bulan (jika filter tersedia dan pilihan bukan "Semua")
 if filter_bulan_tersedia and selected_bulan != "Semua":
     df_filtered = df_filtered[df_filtered['bulan_filter_display'] == selected_bulan]
 
 # ======================================================
-# MENAMPILKAN DATA YANG SUDAH DIFILTER
+# MENAMPILKAN DATAFRAME DENGAN FORMAT RUPIAH
 # ======================================================
-st.subheader("📄 Data Layanan LPK Pekanbaru (Terfilter)")
-st.dataframe(df_filtered, use_container_width=True)
+st.subheader("Data Layanan LPK Pekanbaru (Terfilter)")
+
+# Tentukan kolom yang akan diformat sebagai Rupiah (bisa dikembangkan)
+kolom_moneter = [col for col in df_filtered.columns if 'pnbp' in col.lower() or 'biaya' in col.lower() or 'harga' in col.lower() or 'rupiah' in col.lower()]
+if kolom_moneter:
+    # Buat styler untuk format Rupiah tanpa mengubah data asli
+    styled_df = df_filtered.style.format({col: format_rupiah for col in kolom_moneter})
+    st.dataframe(styled_df, use_container_width=True)
+else:
+    st.dataframe(df_filtered, use_container_width=True)
 
 # ======================================================
-# INFORMASI UMUM (berdasarkan data terfilter)
+# INFORMASI UMUM
 # ======================================================
-st.subheader("📌 Informasi Umum Layanan Jenis LPK Pekanbaru")
-
-jumlah_jenis_layanan = df_filtered['Jenis Layanan'].nunique()
-jumlah_jenis_ikan = df_filtered['Jenis Ikan'].nunique()
-jumlah_dokumen = len(df_filtered)
-
+st.subheader("Informasi Umum Layanan Jenis LPK Pekanbaru")
 col1, col2, col3 = st.columns(3)
 with col1:
-    st.metric("Jumlah Jenis Layanan", jumlah_jenis_layanan)
+    st.metric("Jumlah Jenis Layanan", df_filtered['Jenis Layanan'].nunique())
 with col2:
-    st.metric("Jumlah Jenis Ikan", jumlah_jenis_ikan)
+    st.metric("Jumlah Jenis Ikan", df_filtered['Jenis Ikan'].nunique())
 with col3:
-    st.metric("Jumlah Dokumen Diterbitkan", jumlah_dokumen)
+    st.metric("Jumlah Dokumen Diterbitkan", len(df_filtered))
 
 # ======================================================
-# PETA SUMATERA DENGAN STYLE OPEN STREET MAP (tanpa legenda, teks biru, zoom aktif)
+# PETA SUMATERA (tidak berubah, tetap seperti semula)
 # ======================================================
-st.markdown("## 🗺️ Sebaran Data Layanan per Provinsi di Sumatera")
-
+st.markdown("## Sebaran Data Layanan per Provinsi di Sumatera")
 try:
-    # ------------------------------------------------------------------
-    # 1. Mapping Wilker ke provinsi standar
-    # ------------------------------------------------------------------
     wilker_to_provinsi = {
-        "aceh": "Aceh",
-        "sumatera utara": "Sumatera Utara",
-        "sumut": "Sumatera Utara",
-        "sumatera barat": "Sumatera Barat",
-        "sumbar": "Sumatera Barat",
-        "riau": "Riau",
-        "kepulauan riau": "Kepulauan Riau",
-        "kepri": "Kepulauan Riau",
-        "tanjungpinang": "Kepulauan Riau",
-        "batam": "Kepulauan Riau",
-        "anambas": "Kepulauan Riau",
-        "natuna": "Kepulauan Riau",
-        "letung": "Kepulauan Riau",
-        "jambi": "Jambi",
-        "sumatera selatan": "Sumatera Selatan",
-        "sumsel": "Sumatera Selatan",
-        "bengkulu": "Bengkulu",
-        "bangka belitung": "Kepulauan Bangka Belitung",
-        "babel": "Kepulauan Bangka Belitung",
-        "lampung": "Lampung",
+        "aceh": "Aceh", "sumatera utara": "Sumatera Utara", "sumut": "Sumatera Utara",
+        "sumatera barat": "Sumatera Barat", "sumbar": "Sumatera Barat", "riau": "Riau",
+        "kepulauan riau": "Kepulauan Riau", "kepri": "Kepulauan Riau", "tanjungpinang": "Kepulauan Riau",
+        "batam": "Kepulauan Riau", "anambas": "Kepulauan Riau", "natuna": "Kepulauan Riau",
+        "letung": "Kepulauan Riau", "jambi": "Jambi", "sumatera selatan": "Sumatera Selatan",
+        "sumsel": "Sumatera Selatan", "bengkulu": "Bengkulu", "bangka belitung": "Kepulauan Bangka Belitung",
+        "babel": "Kepulauan Bangka Belitung", "lampung": "Lampung",
     }
-
     def map_wilker(wilker_name):
-        if pd.isna(wilker_name):
-            return None
+        if pd.isna(wilker_name): return None
         nama = str(wilker_name).lower().strip()
         for key, prov in wilker_to_provinsi.items():
-            if key in nama:
-                return prov
+            if key in nama: return prov
         return None
-
     df_filtered['provinsi'] = df_filtered['Wilker'].apply(map_wilker)
     prov_counts = df_filtered[df_filtered['provinsi'].notna()].groupby('provinsi').size().reset_index(name='jumlah')
-    if prov_counts.empty:
-        st.warning("Tidak ada data provinsi yang cocok.")
-    else:
+    if not prov_counts.empty:
         total = prov_counts['jumlah'].sum()
         prov_counts['persen'] = (prov_counts['jumlah'] / total) * 100
-
-        # Koordinat pusat provinsi (untuk penempatan teks)
         prov_center = {
-            "Aceh": (4.6951, 96.7494),
-            "Sumatera Utara": (2.1154, 99.5451),
-            "Sumatera Barat": (-0.7399, 100.8000),
-            "Riau": (0.2933, 101.7068),
-            "Kepulauan Riau": (0.9000, 104.4500),
-            "Jambi": (-1.6101, 103.6131),
-            "Sumatera Selatan": (-3.3194, 103.9144),
-            "Bengkulu": (-3.7928, 102.2608),
-            "Lampung": (-4.5585, 105.4068),
-            "Kepulauan Bangka Belitung": (-2.7410, 106.4406),
+            "Aceh": (4.6951, 96.7494), "Sumatera Utara": (2.1154, 99.5451),
+            "Sumatera Barat": (-0.7399, 100.8000), "Riau": (0.2933, 101.7068),
+            "Kepulauan Riau": (0.9000, 104.4500), "Jambi": (-1.6101, 103.6131),
+            "Sumatera Selatan": (-3.3194, 103.9144), "Bengkulu": (-3.7928, 102.2608),
+            "Lampung": (-4.5585, 105.4068), "Kepulauan Bangka Belitung": (-2.7410, 106.4406),
         }
         prov_counts['lat'] = prov_counts['provinsi'].map(lambda p: prov_center.get(p, (0,0))[0])
         prov_counts['lon'] = prov_counts['provinsi'].map(lambda p: prov_center.get(p, (0,0))[1])
-
-        # ------------------------------------------------------------------
-        # 2. Coba gunakan choropleth dengan GeoJSON
-        # ------------------------------------------------------------------
+        # Choropleth atau scatter mapbox (sama seperti kode asli)
         use_choropleth = False
         geojson_sumatera = None
-        geojson_url = "https://raw.githubusercontent.com/alfarisi/indonesia-geojson/master/geojson/indonesia-province-simple.geojson"
         try:
-            resp = requests.get(geojson_url, timeout=10)
+            resp = requests.get("https://raw.githubusercontent.com/alfarisi/indonesia-geojson/master/geojson/indonesia-province-simple.geojson", timeout=10)
             if resp.status_code == 200:
                 geojson_data = resp.json()
                 if 'features' in geojson_data:
                     sumatera_prov = list(prov_center.keys())
-                    features = [f for f in geojson_data['features'] 
-                                if f['properties'].get('name') in sumatera_prov]
+                    features = [f for f in geojson_data['features'] if f['properties'].get('name') in sumatera_prov]
                     if features:
                         geojson_sumatera = {"type": "FeatureCollection", "features": features}
                         use_choropleth = True
         except:
             pass
-
         if use_choropleth:
-            # Choropleth dengan style OpenStreetMap, tanpa legenda
-            fig = px.choropleth_mapbox(
-                prov_counts,
-                geojson=geojson_sumatera,
-                locations='provinsi',
-                featureidkey="properties.name",
-                color='persen',
-                color_continuous_scale='Oranges',
-                range_color=(0, prov_counts['persen'].max()),
-                mapbox_style='open-street-map',
-                zoom=5.3,
-                center={"lat": -1.5, "lon": 102.5},
-                opacity=0.7,
-                labels={'persen': ''}
-            )
-            fig.update_layout(
-                margin=dict(l=0, r=0, t=0, b=0),
-                height=600,
-                coloraxis_showscale=False
-            )
-            # Tambahkan teks persentase dengan warna biru kontras (tanpa 'weight')
+            fig = px.choropleth_mapbox(prov_counts, geojson=geojson_sumatera, locations='provinsi',
+                                        featureidkey="properties.name", color='persen',
+                                        color_continuous_scale='Oranges', range_color=(0, prov_counts['persen'].max()),
+                                        mapbox_style='open-street-map', zoom=5.3, center={"lat": -1.5, "lon": 102.5},
+                                        opacity=0.7, labels={'persen': ''})
+            fig.update_layout(margin=dict(l=0, r=0, t=0, b=0), height=600, coloraxis_showscale=False)
             for _, row in prov_counts.iterrows():
-                prov = row['provinsi']
-                persen = row['persen']
-                lat, lon = prov_center.get(prov, (None, None))
+                lat, lon = prov_center.get(row['provinsi'], (None, None))
                 if lat and lon:
-                    fig.add_annotation(
-                        x=lon, y=lat,
-                        text=f"{prov}<br>{persen:.1f}%",
-                        showarrow=False,
-                        font=dict(size=10, color="blue"),
-                        bgcolor="rgba(255,255,255,0.85)",
-                        borderpad=3,
-                        bordercolor="blue",
-                        borderwidth=0.5
-                    )
+                    fig.add_annotation(x=lon, y=lat, text=f"{row['provinsi']}<br>{row['persen']:.1f}%",
+                                       showarrow=False, font=dict(size=10, color="blue"),
+                                       bgcolor="rgba(255,255,255,0.85)", borderpad=3, bordercolor="blue", borderwidth=0.5)
             st.plotly_chart(fig, use_container_width=True, config={'scrollZoom': True, 'displayModeBar': True})
         else:
-            # Fallback: scatter mapbox dengan OSM
-            fig = px.scatter_mapbox(
-                prov_counts,
-                lat='lat',
-                lon='lon',
-                color='persen',
-                size=[15] * len(prov_counts),
-                color_continuous_scale='Oranges',
-                hover_name='provinsi',
-                hover_data={'jumlah': ':,.0f', 'persen': ':.2f'},
-                zoom=5.3,
-                center={"lat": -1.5, "lon": 102.5},
-                mapbox_style='open-street-map'
-            )
-            fig.update_layout(
-                margin=dict(l=0, r=0, t=0, b=0),
-                height=600,
-                coloraxis_showscale=False
-            )
+            fig = px.scatter_mapbox(prov_counts, lat='lat', lon='lon', color='persen', size=[15]*len(prov_counts),
+                                    color_continuous_scale='Oranges', hover_name='provinsi',
+                                    hover_data={'jumlah': ':,.0f', 'persen': ':.2f'}, zoom=5.3,
+                                    center={"lat": -1.5, "lon": 102.5}, mapbox_style='open-street-map')
+            fig.update_layout(margin=dict(l=0, r=0, t=0, b=0), height=600, coloraxis_showscale=False)
             for _, row in prov_counts.iterrows():
-                fig.add_annotation(
-                    x=row['lon'], y=row['lat'],
-                    text=f"{row['provinsi']}<br>{row['persen']:.1f}%",
-                    showarrow=False,
-                    font=dict(size=10, color="blue"),
-                    bgcolor="rgba(255,255,255,0.85)",
-                    borderpad=3,
-                    bordercolor="blue",
-                    borderwidth=0.5
-                )
+                fig.add_annotation(x=row['lon'], y=row['lat'], text=f"{row['provinsi']}<br>{row['persen']:.1f}%",
+                                   showarrow=False, font=dict(size=10, color="blue"),
+                                   bgcolor="rgba(255,255,255,0.85)", borderpad=3, bordercolor="blue", borderwidth=0.5)
             st.plotly_chart(fig, use_container_width=True, config={'scrollZoom': True, 'displayModeBar': True})
-            st.info("GeoJSON tidak tersedia, ditampilkan peta marker dengan style OpenStreetMap.")
-
-        # Tabel detail di expander
         with st.expander("📋 Tabel Persentase per Provinsi"):
             st.dataframe(prov_counts[['provinsi', 'jumlah', 'persen']].sort_values('persen', ascending=False))
-
+    else:
+        st.warning("Tidak ada data provinsi yang cocok.")
 except Exception as e:
     st.error(f"Gagal menampilkan peta: {e}")
 
 # ======================================================
-# VISUALISASI PERBANDINGAN DENGAN KOLOM NUMERIK PILIHAN
+# VISUALISASI PERBANDINGAN DENGAN FORMAT RUPIAH (JIKA MONETER)
 # ======================================================
 if numeric_columns and selected_numeric != 'Tidak ada kolom numerik':
     st.subheader(f"📊 Perbandingan {selected_numeric} Berdasarkan Kategori")
+    # Tentukan apakah kolom ini bersifat moneter
+    is_monetary = any(kata in selected_numeric.lower() for kata in ['pnbp', 'biaya', 'harga', 'rupiah', 'pendapatan', 'nominal'])
 
-    # Tab untuk perbandingan
     tab1, tab2, tab3 = st.tabs(["Berdasarkan Jenis Layanan", "Berdasarkan Jenis Ikan", "Berdasarkan Bulan (jika ada)"])
 
     with tab1:
-        # Group by Jenis Layanan
         agg_data = df_filtered.groupby('Jenis Layanan')[selected_numeric].sum().reset_index()
         agg_data = agg_data.sort_values(selected_numeric, ascending=False)
-        fig = px.bar(agg_data, x='Jenis Layanan', y=selected_numeric,
-                     text=selected_numeric,
-                     title=f"Total {selected_numeric} per Jenis Layanan",
-                     template='plotly_white',
-                     color=selected_numeric, color_continuous_scale='Blues')
-        fig.update_traces(texttemplate='%{text:,.0f}', textposition='outside')
+        if is_monetary:
+            agg_data['display'] = agg_data[selected_numeric].apply(lambda x: format_rupiah(x))
+            fig = px.bar(agg_data, x='Jenis Layanan', y=selected_numeric,
+                         text='display', title=f"Total {selected_numeric} per Jenis Layanan",
+                         template='plotly_white', color=selected_numeric, color_continuous_scale='Blues')
+            fig.update_traces(textposition='outside')
+            fig.update_layout(yaxis_title=f"{selected_numeric} (Rp)")
+        else:
+            fig = px.bar(agg_data, x='Jenis Layanan', y=selected_numeric,
+                         text=selected_numeric, title=f"Total {selected_numeric} per Jenis Layanan",
+                         template='plotly_white', color=selected_numeric, color_continuous_scale='Blues')
+            fig.update_traces(texttemplate='%{text:,.0f}', textposition='outside')
         fig.update_layout(height=500, xaxis_tickangle=-25)
         st.plotly_chart(fig, use_container_width=True)
 
     with tab2:
-        # Group by Jenis Ikan
         agg_data = df_filtered.groupby('Jenis Ikan')[selected_numeric].sum().reset_index()
         agg_data = agg_data.sort_values(selected_numeric, ascending=False)
-        fig = px.bar(agg_data, x='Jenis Ikan', y=selected_numeric,
-                     text=selected_numeric,
-                     title=f"Total {selected_numeric} per Jenis Ikan",
-                     template='plotly_white',
-                     color=selected_numeric, color_continuous_scale='Blues')
-        fig.update_traces(texttemplate='%{text:,.0f}', textposition='outside')
+        if is_monetary:
+            agg_data['display'] = agg_data[selected_numeric].apply(lambda x: format_rupiah(x))
+            fig = px.bar(agg_data, x='Jenis Ikan', y=selected_numeric,
+                         text='display', title=f"Total {selected_numeric} per Jenis Ikan",
+                         template='plotly_white', color=selected_numeric, color_continuous_scale='Blues')
+            fig.update_traces(textposition='outside')
+            fig.update_layout(yaxis_title=f"{selected_numeric} (Rp)")
+        else:
+            fig = px.bar(agg_data, x='Jenis Ikan', y=selected_numeric,
+                         text=selected_numeric, title=f"Total {selected_numeric} per Jenis Ikan",
+                         template='plotly_white', color=selected_numeric, color_continuous_scale='Blues')
+            fig.update_traces(texttemplate='%{text:,.0f}', textposition='outside')
         fig.update_layout(height=500, xaxis_tickangle=-25)
         st.plotly_chart(fig, use_container_width=True)
 
     with tab3:
-        if filter_bulan_tersedia:
-            # Gunakan kolom bulan_filter_display untuk grouping
-            if 'bulan_filter_display' in df_filtered.columns:
-                agg_data = df_filtered.groupby('bulan_filter_display')[selected_numeric].sum().reset_index()
-                agg_data = agg_data.sort_values('bulan_filter_display')
+        if filter_bulan_tersedia and 'bulan_filter_display' in df_filtered.columns:
+            agg_data = df_filtered.groupby('bulan_filter_display')[selected_numeric].sum().reset_index()
+            agg_data = agg_data.sort_values('bulan_filter_display')
+            if is_monetary:
                 fig = px.line(agg_data, x='bulan_filter_display', y=selected_numeric,
-                              markers=True,
-                              title=f"Trend {selected_numeric} per Bulan",
-                              template='plotly_white',
-                              color_discrete_sequence=['#3b82f6'])
+                              markers=True, title=f"Trend {selected_numeric} per Bulan",
+                              template='plotly_white', color_discrete_sequence=['#3b82f6'])
                 fig.update_traces(line=dict(width=3), marker=dict(size=8))
-                fig.update_layout(height=500)
-                st.plotly_chart(fig, use_container_width=True)
+                fig.update_layout(yaxis_title=f"{selected_numeric} (Rp)")
             else:
-                st.info("Tidak ada data bulan untuk ditampilkan.")
+                fig = px.line(agg_data, x='bulan_filter_display', y=selected_numeric,
+                              markers=True, title=f"Trend {selected_numeric} per Bulan",
+                              template='plotly_white', color_discrete_sequence=['#3b82f6'])
+                fig.update_traces(line=dict(width=3), marker=dict(size=8))
+            fig.update_layout(height=500)
+            st.plotly_chart(fig, use_container_width=True)
         else:
             st.info("Tidak ada kolom bulan atau tanggal yang valid.")
 
 # ======================================================
-# JUMLAH DOKUMEN PER JENIS LAYANAN (bar chart)
+# JUMLAH DOKUMEN PER JENIS LAYANAN (tidak berubah)
 # ======================================================
-st.markdown("## 📊 Jumlah Setiap Jenis Layanan (Terfilter)")
+st.markdown("Jumlah Setiap Jenis Layanan (Terfilter)")
 layanan_count = df_filtered['Jenis Layanan'].value_counts().reset_index()
 layanan_count.columns = ['Jenis Layanan', 'Jumlah']
 fig_layanan = px.bar(layanan_count, x='Jenis Layanan', y='Jumlah', text='Jumlah',
@@ -553,25 +470,26 @@ fig_layanan.update_layout(height=500, xaxis_tickangle=-25)
 st.plotly_chart(fig_layanan, use_container_width=True)
 
 # ======================================================
-# TOTAL PNBP PER JENIS LAYANAN (jika kolom tersedia)
+# TOTAL PNBP PER JENIS LAYANAN (sudah Rupiah, diperkuat)
 # ======================================================
 if 'Jumlah PNBP' in df_filtered.columns:
-    st.markdown("## 💰 Total PNBP per Jenis Layanan (Terfilter)")
+    st.markdown("Total PNBP per Jenis Layanan (Terfilter)")
     try:
         pnbp_layanan = df_filtered.groupby('Jenis Layanan')['Jumlah PNBP'].sum().reset_index()
-        fig_pnbp = px.bar(pnbp_layanan, x='Jenis Layanan', y='Jumlah PNBP', text='Jumlah PNBP',
-                          title='Total PNBP Berdasarkan Jenis Layanan', template='plotly_white',
-                          color='Jumlah PNBP', color_continuous_scale='Blues')
-        fig_pnbp.update_traces(texttemplate='Rp %{text:,.0f}', textposition='outside')
-        fig_pnbp.update_layout(height=500, xaxis_tickangle=-25)
+        pnbp_layanan['display'] = pnbp_layanan['Jumlah PNBP'].apply(format_rupiah)
+        fig_pnbp = px.bar(pnbp_layanan, x='Jenis Layanan', y='Jumlah PNBP',
+                          text='display', title='Total PNBP Berdasarkan Jenis Layanan',
+                          template='plotly_white', color='Jumlah PNBP', color_continuous_scale='Blues')
+        fig_pnbp.update_traces(textposition='outside')
+        fig_pnbp.update_layout(yaxis_title="Jumlah PNBP (Rp)", height=500, xaxis_tickangle=-25)
         st.plotly_chart(fig_pnbp, use_container_width=True)
     except Exception as e:
         st.error(f"Terjadi error pada chart PNBP: {e}")
 
 # ======================================================
-# DOWNLOAD DATA (terfilter)
+# DOWNLOAD DATA (tetap asli, tanpa format Rupiah)
 # ======================================================
-st.markdown("### 📥 Download Data")
+st.markdown("Download Data")
 csv = df_filtered.to_csv(index=False).encode('utf-8')
 st.download_button(label="⬇️ Download Data Filter (.CSV)", data=csv,
                    file_name='data_layanan_lpk_pekanbaru_filtered.csv', mime='text/csv')
@@ -581,7 +499,6 @@ st.download_button(label="⬇️ Download Data Filter (.CSV)", data=csv,
 # ======================================================
 st.markdown("---")
 st.caption("Loka Pengelolaan Kelautan Pekanbaru")
-
 if st.button("Refresh Data"):
     st.cache_data.clear()
     st.rerun()
