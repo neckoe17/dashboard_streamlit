@@ -487,6 +487,24 @@ if 'Jumlah PNBP' in df_filtered.columns:
         st.error(f"Terjadi error pada chart PNBP: {e}")
 
 # ======================================================
+# TOTAL PNBP PER SATPEL (WILKER)
+# ======================================================
+if 'Jumlah PNBP' in df_filtered.columns:
+    st.markdown("Total PNBP per Satuan Pelayanan (Wilker)")
+    try:
+        pnbp_wilker = df_filtered.groupby('Wilker')['Jumlah PNBP'].sum().reset_index()
+        pnbp_wilker = pnbp_wilker.sort_values('Jumlah PNBP', ascending=False)
+        pnbp_wilker['display'] = pnbp_wilker['Jumlah PNBP'].apply(format_rupiah)
+        fig_pnbp_wilker = px.bar(pnbp_wilker, x='Wilker', y='Jumlah PNBP',
+                                 text='display', title='Total PNBP Berdasarkan Satuan Pelayanan (Wilker)',
+                                 template='plotly_white', color='Jumlah PNBP', color_continuous_scale='Blues')
+        fig_pnbp_wilker.update_traces(textposition='outside')
+        fig_pnbp_wilker.update_layout(yaxis_title="Jumlah PNBP (Rp)", height=500, xaxis_tickangle=-25)
+        st.plotly_chart(fig_pnbp_wilker, use_container_width=True)
+    except Exception as e:
+        st.error(f"Terjadi error pada chart PNBP per Satpel: {e}")
+
+# ======================================================
 # DOWNLOAD DATA (tetap asli, tanpa format Rupiah)
 # ======================================================
 st.markdown("Download Data")
