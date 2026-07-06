@@ -490,17 +490,40 @@ if 'Jumlah PNBP' in df_filtered.columns:
 # TOTAL PNBP PER SATPEL (WILKER)
 # ======================================================
 if 'Jumlah PNBP' in df_filtered.columns:
-    st.markdown("Total PNBP per Satuan Pelayanan (Wilker)")
+    st.markdown("### Total PNBP per Satuan Pelayanan (Wilker)")
     try:
+        # Agregasi PNBP per Wilker
         pnbp_wilker = df_filtered.groupby('Wilker')['Jumlah PNBP'].sum().reset_index()
+        # Urutkan dari yang terbesar
         pnbp_wilker = pnbp_wilker.sort_values('Jumlah PNBP', ascending=False)
+        # Format Rupiah untuk teks pada bar
         pnbp_wilker['display'] = pnbp_wilker['Jumlah PNBP'].apply(format_rupiah)
-        fig_pnbp_wilker = px.bar(pnbp_wilker, x='Wilker', y='Jumlah PNBP',
-                                 text='display', title='Total PNBP Berdasarkan Satuan Pelayanan (Wilker)',
-                                 template='plotly_white', color='Jumlah PNBP', color_continuous_scale='Blues')
+        
+        # Buat bar chart
+        fig_pnbp_wilker = px.bar(
+            pnbp_wilker,
+            x='Wilker',
+            y='Jumlah PNBP',
+            text='display',
+            title='Total PNBP Berdasarkan Satuan Pelayanan (Wilker)',
+            template='plotly_white',
+            color='Jumlah PNBP',
+            color_continuous_scale='Blues'
+        )
         fig_pnbp_wilker.update_traces(textposition='outside')
-        fig_pnbp_wilker.update_layout(yaxis_title="Jumlah PNBP (Rp)", height=500, xaxis_tickangle=-25)
+        fig_pnbp_wilker.update_layout(
+            yaxis_title="Jumlah PNBP (Rp)",
+            height=500,
+            xaxis_tickangle=-25
+        )
         st.plotly_chart(fig_pnbp_wilker, use_container_width=True)
+        
+        # Opsional: tampilkan tabel ringkasan
+        with st.expander("📋 Tabel PNBP per Satpel"):
+            st.dataframe(
+                pnbp_wilker[['Wilker', 'Jumlah PNBP']].style.format({'Jumlah PNBP': format_rupiah}),
+                use_container_width=True
+            )
     except Exception as e:
         st.error(f"Terjadi error pada chart PNBP per Satpel: {e}")
 
