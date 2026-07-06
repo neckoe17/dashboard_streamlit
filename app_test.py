@@ -78,8 +78,8 @@ def add_bg_from_local(image_file):
         .block-container {{
             background: rgba(255,255,255,0.58);
             backdrop-filter: blur(18px);
-            border-radius: 28px;
-            padding: 2.5rem;
+            border-radius: 0px;
+            padding: 1.5rem;
             border: 1px solid rgba(255,255,255,0.35);
             box-shadow: 0 10px 40px rgba(15,23,42,0.10);
         }}
